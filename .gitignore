@@ -1,0 +1,26 @@
+# --- Raw data: too large for git, and not ours to redistribute publicly ---
+# See data/raw/README.md for how to obtain these files.
+data/raw/*
+!data/raw/README.md
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+venv/
+.venv/
+env/
+
+# --- Generated docs / reports ---
+docs/api/
+*.pyc
+
+# --- OS / editor cruft ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
