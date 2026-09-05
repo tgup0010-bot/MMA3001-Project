@@ -12,8 +12,10 @@ harming comfort. This project builds and validates a short-term occupancy
 prediction model from historical sensor data collected in Monash's Smart
 Infrastructure ("Living Lab") building.
 
-**Status: in progress.** See [`docs/report/`](docs/report) for the current
-write-up once available, and the Roadmap section below for what's done.
+**Status: in progress.** Data pipeline, baselines and a first ML model are
+implemented and validated end-to-end on the real dataset (see
+[Current results](#current-results) below). See
+[`docs/report/`](docs/report) for the written report once drafted.
 
 ## Data
 
@@ -50,13 +52,16 @@ for fast development and testing.
 ## Repository structure
 
 ```
-├── src/occupancy/       Python package: data loading, preprocessing, models
-├── tests/               pytest unit tests
+├── src/occupancy/       Python package: data loading, preprocessing,
+│                        feature engineering, baselines, ML model, evaluation
+├── scripts/             Runnable end-to-end experiment script
+├── tests/               pytest unit tests (23, all passing)
 ├── data/raw/            Raw data (gitignored — see data/raw/README.md)
 ├── data/processed/      Small committed sample data, derived artefacts
 ├── docs/project_brief/  Unit-supplied project brief and dataset docs
+├── docs/api/            Generated HTML code documentation (pdoc)
 ├── docs/report/         Written project report (added once drafted)
-└── reports/figures/     Generated plots/figures
+└── reports/             Experiment results, test report, figures
 ```
 
 ## Setup
@@ -70,7 +75,8 @@ pip install -e ".[dev]"
 ## Running the tests
 
 ```bash
-pytest
+pytest                                          # 23 unit tests
+pytest --junitxml=reports/test_report.xml       # regenerate the committed test report
 ```
 
 ## Generating code documentation
@@ -78,6 +84,57 @@ pytest
 ```bash
 pdoc --output-dir docs/api src/occupancy
 ```
+
+## Running the full experiment
+
+Requires the raw occupancy CSV in `data/raw/` (see
+[`data/raw/README.md`](data/raw/README.md)):
+
+```bash
+python scripts/run_experiment.py
+```
+
+This loads the full 9.09M-row event log, resamples it to a 15-minute
+per-room grid, builds the supervised next-interval-occupancy dataset,
+splits chronologically (80/20, never randomly — a random split would leak
+future information into training), and evaluates the persistence baseline,
+the time-of-day Markov baseline, and the logistic regression model.
+Results are written to `reports/experiment_results.json`.
+
+### Current results
+
+On a chronological holdout (train up to 2025-10-15, test after), out of
+342,401 resampled 15-minute bins (26.5% dropped for missing lag/rolling
+history — see `data_info` in `reports/experiment_results.json`):
+
+| Model | Accuracy | F1 | ROC-AUC | Brier score (↓ better) |
+|---|---|---|---|---|
+| Persistence baseline | 0.816 | 0.771 | 0.809 | 0.184 |
+| Markov (time-of-day) baseline | 0.817 | 0.772 | 0.870 | 0.139 |
+| Logistic regression | **0.825** | **0.781** | **0.890** | **0.128** |
+
+The logistic regression model outperforms both baselines on every metric,
+including calibration (Brier score) — a first piece of evidence that the
+engineered calendar/history features carry real predictive signal beyond
+"a room's state tends to persist" and "occupancy follows daily patterns."
+This is not yet a final result: see the Roadmap below for sensitivity
+analysis and optimisation work still to come.
+
+## Roadmap
+
+- [x] Data loading + schema validation
+- [x] Event log → regular time-grid preprocessing (with explicit max-gap
+      handling of long sensor outages)
+- [x] Feature engineering (calendar cyclical features, lag, rolling mean)
+- [x] Persistence baseline
+- [x] Time-of-day Markov chain baseline
+- [x] Logistic regression ML model
+- [x] Chronological validation split + evaluation metrics
+- [ ] Sensitivity analysis: bin size and lookback-window trade-offs
+- [ ] Runtime/memory profiling comparison across models
+- [ ] A second ML model (e.g. random forest) for a richer comparison
+- [ ] Written report (`docs/report/`)
+- [ ] AI-use reflection section in the report
 
 ## AI use
 
