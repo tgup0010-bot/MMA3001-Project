@@ -1,10 +1,13 @@
-"""Unit tests for occupancy.model.build_logistic_pipeline."""
+"""Unit tests for occupancy.model pipelines (logistic regression + random forest)."""
 
 import numpy as np
 import pandas as pd
+import pytest
 
 from occupancy.features import CATEGORICAL_FEATURES, NUMERIC_FEATURES
-from occupancy.model import build_logistic_pipeline
+from occupancy.model import build_logistic_pipeline, build_random_forest_pipeline
+
+PIPELINE_BUILDERS = [build_logistic_pipeline, build_random_forest_pipeline]
 
 
 def _toy_dataset(n: int = 40) -> tuple[pd.DataFrame, np.ndarray]:
@@ -20,9 +23,10 @@ def _toy_dataset(n: int = 40) -> tuple[pd.DataFrame, np.ndarray]:
     return X, y
 
 
-def test_pipeline_fits_and_predicts_valid_probabilities():
+@pytest.mark.parametrize("build_pipeline", PIPELINE_BUILDERS)
+def test_pipeline_fits_and_predicts_valid_probabilities(build_pipeline):
     X, y = _toy_dataset()
-    pipeline = build_logistic_pipeline()
+    pipeline = build_pipeline()
     pipeline.fit(X, y)
 
     proba = pipeline.predict_proba(X)
@@ -35,9 +39,10 @@ def test_pipeline_fits_and_predicts_valid_probabilities():
     assert set(np.unique(preds)).issubset({0, 1})
 
 
-def test_pipeline_handles_unseen_room_category_at_predict_time():
+@pytest.mark.parametrize("build_pipeline", PIPELINE_BUILDERS)
+def test_pipeline_handles_unseen_room_category_at_predict_time(build_pipeline):
     X, y = _toy_dataset()
-    pipeline = build_logistic_pipeline()
+    pipeline = build_pipeline()
     pipeline.fit(X, y)
 
     X_new = X.iloc[[0]].copy()
@@ -47,3 +52,16 @@ def test_pipeline_handles_unseen_room_category_at_predict_time():
     proba = pipeline.predict_proba(X_new)
     assert proba.shape == (1, 2)
     assert 0.0 <= proba[0, 1] <= 1.0
+
+
+def test_random_forest_pipeline_is_reproducible_with_fixed_random_state():
+    """Two forests built with the same random_state must agree exactly."""
+    X, y = _toy_dataset()
+    pipeline_a = build_random_forest_pipeline(random_state=7, n_estimators=10)
+    pipeline_b = build_random_forest_pipeline(random_state=7, n_estimators=10)
+    pipeline_a.fit(X, y)
+    pipeline_b.fit(X, y)
+
+    np.testing.assert_array_equal(
+        pipeline_a.predict_proba(X), pipeline_b.predict_proba(X)
+    )

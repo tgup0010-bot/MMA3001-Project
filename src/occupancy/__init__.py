@@ -12,7 +12,7 @@ from occupancy.baselines import MarkovBaseline, persistence_predict_proba
 from occupancy.data_loading import load_occupancy_log
 from occupancy.evaluation import chronological_split, evaluate_predictions
 from occupancy.features import build_supervised_dataset
-from occupancy.model import build_logistic_pipeline
+from occupancy.model import build_logistic_pipeline, build_random_forest_pipeline
 from occupancy.preprocessing import resample_occupancy
 
 __all__ = [
@@ -22,6 +22,7 @@ __all__ = [
     "MarkovBaseline",
     "persistence_predict_proba",
     "build_logistic_pipeline",
+    "build_random_forest_pipeline",
     "chronological_split",
     "evaluate_predictions",
 ]
