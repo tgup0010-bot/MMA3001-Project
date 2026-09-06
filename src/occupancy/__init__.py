@@ -14,6 +14,7 @@ from occupancy.evaluation import chronological_split, evaluate_predictions
 from occupancy.features import build_supervised_dataset
 from occupancy.model import build_logistic_pipeline, build_random_forest_pipeline
 from occupancy.preprocessing import resample_occupancy
+from occupancy.rooms import room_label
 
 __all__ = [
     "load_occupancy_log",
@@ -25,6 +26,7 @@ __all__ = [
     "build_random_forest_pipeline",
     "chronological_split",
     "evaluate_predictions",
+    "room_label",
 ]
 
 __version__ = "0.1.0"

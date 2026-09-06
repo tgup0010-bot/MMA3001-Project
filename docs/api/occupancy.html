@@ -65,6 +65,9 @@
             <li>
                     <a class="function" href="#evaluate_predictions">evaluate_predictions</a>
             </li>
+            <li>
+                    <a class="function" href="#room_label">room_label</a>
+            </li>
     </ul>
 
 
@@ -111,20 +114,22 @@ validation methodology and results.</p>
 </span><span id="L-14"><a href="#L-14"><span class="linenos">14</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">occupancy.features</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_supervised_dataset</span>
 </span><span id="L-15"><a href="#L-15"><span class="linenos">15</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">occupancy.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_logistic_pipeline</span><span class="p">,</span> <span class="n">build_random_forest_pipeline</span>
 </span><span id="L-16"><a href="#L-16"><span class="linenos">16</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">occupancy.preprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">resample_occupancy</span>
-</span><span id="L-17"><a href="#L-17"><span class="linenos">17</span></a>
-</span><span id="L-18"><a href="#L-18"><span class="linenos">18</span></a><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
-</span><span id="L-19"><a href="#L-19"><span class="linenos">19</span></a>    <span class="s2">"load_occupancy_log"</span><span class="p">,</span>
-</span><span id="L-20"><a href="#L-20"><span class="linenos">20</span></a>    <span class="s2">"resample_occupancy"</span><span class="p">,</span>
-</span><span id="L-21"><a href="#L-21"><span class="linenos">21</span></a>    <span class="s2">"build_supervised_dataset"</span><span class="p">,</span>
-</span><span id="L-22"><a href="#L-22"><span class="linenos">22</span></a>    <span class="s2">"MarkovBaseline"</span><span class="p">,</span>
-</span><span id="L-23"><a href="#L-23"><span class="linenos">23</span></a>    <span class="s2">"persistence_predict_proba"</span><span class="p">,</span>
-</span><span id="L-24"><a href="#L-24"><span class="linenos">24</span></a>    <span class="s2">"build_logistic_pipeline"</span><span class="p">,</span>
-</span><span id="L-25"><a href="#L-25"><span class="linenos">25</span></a>    <span class="s2">"build_random_forest_pipeline"</span><span class="p">,</span>
-</span><span id="L-26"><a href="#L-26"><span class="linenos">26</span></a>    <span class="s2">"chronological_split"</span><span class="p">,</span>
-</span><span id="L-27"><a href="#L-27"><span class="linenos">27</span></a>    <span class="s2">"evaluate_predictions"</span><span class="p">,</span>
-</span><span id="L-28"><a href="#L-28"><span class="linenos">28</span></a><span class="p">]</span>
-</span><span id="L-29"><a href="#L-29"><span class="linenos">29</span></a>
-</span><span id="L-30"><a href="#L-30"><span class="linenos">30</span></a><span class="n">__version__</span> <span class="o">=</span> <span class="s2">"0.1.0"</span>
+</span><span id="L-17"><a href="#L-17"><span class="linenos">17</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">occupancy.rooms</span><span class="w"> </span><span class="kn">import</span> <span class="n">room_label</span>
+</span><span id="L-18"><a href="#L-18"><span class="linenos">18</span></a>
+</span><span id="L-19"><a href="#L-19"><span class="linenos">19</span></a><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+</span><span id="L-20"><a href="#L-20"><span class="linenos">20</span></a>    <span class="s2">"load_occupancy_log"</span><span class="p">,</span>
+</span><span id="L-21"><a href="#L-21"><span class="linenos">21</span></a>    <span class="s2">"resample_occupancy"</span><span class="p">,</span>
+</span><span id="L-22"><a href="#L-22"><span class="linenos">22</span></a>    <span class="s2">"build_supervised_dataset"</span><span class="p">,</span>
+</span><span id="L-23"><a href="#L-23"><span class="linenos">23</span></a>    <span class="s2">"MarkovBaseline"</span><span class="p">,</span>
+</span><span id="L-24"><a href="#L-24"><span class="linenos">24</span></a>    <span class="s2">"persistence_predict_proba"</span><span class="p">,</span>
+</span><span id="L-25"><a href="#L-25"><span class="linenos">25</span></a>    <span class="s2">"build_logistic_pipeline"</span><span class="p">,</span>
+</span><span id="L-26"><a href="#L-26"><span class="linenos">26</span></a>    <span class="s2">"build_random_forest_pipeline"</span><span class="p">,</span>
+</span><span id="L-27"><a href="#L-27"><span class="linenos">27</span></a>    <span class="s2">"chronological_split"</span><span class="p">,</span>
+</span><span id="L-28"><a href="#L-28"><span class="linenos">28</span></a>    <span class="s2">"evaluate_predictions"</span><span class="p">,</span>
+</span><span id="L-29"><a href="#L-29"><span class="linenos">29</span></a>    <span class="s2">"room_label"</span><span class="p">,</span>
+</span><span id="L-30"><a href="#L-30"><span class="linenos">30</span></a><span class="p">]</span>
+</span><span id="L-31"><a href="#L-31"><span class="linenos">31</span></a>
+</span><span id="L-32"><a href="#L-32"><span class="linenos">32</span></a><span class="n">__version__</span> <span class="o">=</span> <span class="s2">"0.1.0"</span>
 </span></pre></div>
 
 
@@ -1092,6 +1097,47 @@ predicts the majority class.</p>
     <code>y_true</code> has only one class present), <code>brier_score</code>
     (calibration -- lower is better), <code>n</code> (rows evaluated) and
     <code>positive_rate</code> (base rate of the occupied class, for context).</p>
+</div>
+
+
+                </section>
+                <section id="room_label">
+                            <input id="room_label-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">room_label</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">floorspaceid</span><span class="p">:</span> <span class="nb">str</span></span><span class="return-annotation">) -> <span class="nb">str</span>:</span></span>
+
+                <label class="view-source-button" for="room_label-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#room_label"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="room_label-21"><a href="#room_label-21"><span class="linenos">21</span></a><span class="k">def</span><span class="w"> </span><span class="nf">room_label</span><span class="p">(</span><span class="n">floorspaceid</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="room_label-22"><a href="#room_label-22"><span class="linenos">22</span></a><span class="w">    </span><span class="sd">"""Return a human-friendly label for a room identifier.</span>
+</span><span id="room_label-23"><a href="#room_label-23"><span class="linenos">23</span></a>
+</span><span id="room_label-24"><a href="#room_label-24"><span class="linenos">24</span></a><span class="sd">    Args:</span>
+</span><span id="room_label-25"><a href="#room_label-25"><span class="linenos">25</span></a><span class="sd">        floorspaceid: The raw room identifier from the occupancy log.</span>
+</span><span id="room_label-26"><a href="#room_label-26"><span class="linenos">26</span></a>
+</span><span id="room_label-27"><a href="#room_label-27"><span class="linenos">27</span></a><span class="sd">    Returns:</span>
+</span><span id="room_label-28"><a href="#room_label-28"><span class="linenos">28</span></a><span class="sd">        The known physical room name if ``floorspaceid`` is in</span>
+</span><span id="room_label-29"><a href="#room_label-29"><span class="linenos">29</span></a><span class="sd">        :data:`ROOM_LABELS`; otherwise ``"Zone &lt;first 8 chars&gt; (unidentified)"``</span>
+</span><span id="room_label-30"><a href="#room_label-30"><span class="linenos">30</span></a><span class="sd">        -- never a made-up name.</span>
+</span><span id="room_label-31"><a href="#room_label-31"><span class="linenos">31</span></a><span class="sd">    """</span>
+</span><span id="room_label-32"><a href="#room_label-32"><span class="linenos">32</span></a>    <span class="k">if</span> <span class="n">floorspaceid</span> <span class="ow">in</span> <span class="n">ROOM_LABELS</span><span class="p">:</span>
+</span><span id="room_label-33"><a href="#room_label-33"><span class="linenos">33</span></a>        <span class="k">return</span> <span class="n">ROOM_LABELS</span><span class="p">[</span><span class="n">floorspaceid</span><span class="p">]</span>
+</span><span id="room_label-34"><a href="#room_label-34"><span class="linenos">34</span></a>    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Zone </span><span class="si">{</span><span class="n">floorspaceid</span><span class="p">[:</span><span class="mi">8</span><span class="p">]</span><span class="si">}</span><span class="s2"> (unidentified)"</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>Return a human-friendly label for a room identifier.</p>
+
+<p>Args:
+    floorspaceid: The raw room identifier from the occupancy log.</p>
+
+<p>Returns:
+    The known physical room name if <code>floorspaceid</code> is in
+    <code>ROOM_LABELS</code>; otherwise <code>"Zone &lt;first 8 chars&gt; (unidentified)"</code>
+    -- never a made-up name.</p>
 </div>
 
 
