@@ -12,10 +12,12 @@ harming comfort. This project builds and validates a short-term occupancy
 prediction model from historical sensor data collected in Monash's Smart
 Infrastructure ("Living Lab") building.
 
-**Status: in progress.** Data pipeline, baselines and a first ML model are
-implemented and validated end-to-end on the real dataset (see
-[Current results](#current-results) below). See
-[`docs/report/`](docs/report) for the written report once drafted.
+**Status: complete.** Data pipeline, two baselines, two ML models,
+chronological validation, and a sensitivity/optimisation analysis are all
+implemented and run end-to-end against the real dataset (see
+[Current results](#current-results) below). The full written report is at
+[`docs/report/MMA3001_Project_Report.docx`](docs/report/MMA3001_Project_Report.docx)
+(also available as [Markdown](docs/report/report.md)).
 
 ## Data
 
@@ -53,15 +55,15 @@ for fast development and testing.
 
 ```
 ├── src/occupancy/       Python package: data loading, preprocessing,
-│                        feature engineering, baselines, ML model, evaluation
-├── scripts/             Runnable end-to-end experiment script
-├── tests/               pytest unit tests (23, all passing)
+│                        feature engineering, baselines, ML models, evaluation
+├── scripts/             Runnable experiment + sensitivity-analysis scripts
+├── tests/               pytest unit tests (26, all passing)
 ├── data/raw/            Raw data (gitignored — see data/raw/README.md)
 ├── data/processed/      Small committed sample data, derived artefacts
 ├── docs/project_brief/  Unit-supplied project brief and dataset docs
 ├── docs/api/            Generated HTML code documentation (pdoc)
-├── docs/report/         Written project report (added once drafted)
-└── reports/             Experiment results, test report, figures
+├── docs/report/         Written project report (.docx submission + .md source)
+└── reports/             Experiment + sensitivity-analysis results, test report
 ```
 
 ## Setup
@@ -75,7 +77,7 @@ pip install -e ".[dev]"
 ## Running the tests
 
 ```bash
-pytest                                          # 23 unit tests
+pytest                                          # 26 unit tests
 pytest --junitxml=reports/test_report.xml       # regenerate the committed test report
 ```
 
@@ -101,6 +103,17 @@ future information into training), and evaluates the persistence baseline,
 the time-of-day Markov baseline, and the logistic regression model.
 Results are written to `reports/experiment_results.json`.
 
+```bash
+python scripts/sensitivity_analysis.py
+```
+
+Re-runs the pipeline across a sweep of time-bin resolutions (5/15/30/60
+min) and lookback-window lengths (30 min/1 h/2 h/4 h), fitting both the
+logistic regression and random forest models at each setting, and records
+accuracy, ROC-AUC, fit/predict time, and model size at each point. Results
+are written to `reports/sensitivity_results.json`. This is the evidence
+behind the optimisation section of the report (§6).
+
 ### Current results
 
 On a chronological holdout (train up to 2025-10-15, test after), out of
@@ -111,14 +124,15 @@ history — see `data_info` in `reports/experiment_results.json`):
 |---|---|---|---|---|
 | Persistence baseline | 0.816 | 0.771 | 0.809 | 0.184 |
 | Markov (time-of-day) baseline | 0.817 | 0.772 | 0.870 | 0.139 |
-| Logistic regression | **0.825** | **0.781** | **0.890** | **0.128** |
+| **Logistic regression** | **0.825** | **0.781** | **0.890** | **0.128** |
+| Random forest (100 trees) | 0.811 | — | 0.860 | — |
 
-The logistic regression model outperforms both baselines on every metric,
-including calibration (Brier score) — a first piece of evidence that the
-engineered calendar/history features carry real predictive signal beyond
-"a room's state tends to persist" and "occupancy follows daily patterns."
-This is not yet a final result: see the Roadmap below for sensitivity
-analysis and optimisation work still to come.
+Logistic regression outperforms every baseline **and** the more complex
+random forest on every metric, while being ~50× cheaper to fit and to run
+per prediction (see the report §6.3) — a genuine, evidence-based
+justification for the final model choice, not a default pick. Full
+sensitivity analysis (bin size, lookback window) and the model-cost
+comparison are in [`docs/report/MMA3001_Project_Report.docx`](docs/report/MMA3001_Project_Report.docx), §6.
 
 ## Roadmap
 
@@ -129,12 +143,13 @@ analysis and optimisation work still to come.
 - [x] Persistence baseline
 - [x] Time-of-day Markov chain baseline
 - [x] Logistic regression ML model
+- [x] Random forest ML model (second, richer comparison)
 - [x] Chronological validation split + evaluation metrics
-- [ ] Sensitivity analysis: bin size and lookback-window trade-offs
-- [ ] Runtime/memory profiling comparison across models
-- [ ] A second ML model (e.g. random forest) for a richer comparison
-- [ ] Written report (`docs/report/`)
-- [ ] AI-use reflection section in the report
+- [x] Sensitivity analysis: bin size and lookback-window trade-offs
+- [x] Runtime/model-complexity comparison across models
+- [x] Written report (`docs/report/MMA3001_Project_Report.docx`)
+- [x] AI-use reflection section in the report (student review still
+      recommended before submission — see the report's note to reader)
 
 ## AI use
 
