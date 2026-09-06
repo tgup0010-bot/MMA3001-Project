@@ -25,3 +25,7 @@ env/
 Thumbs.db
 .vscode/
 .idea/
+~$*.docx
+
+# --- Local Moodle-submission staging (not part of the repo itself) ---
+submission/

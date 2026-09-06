@@ -56,8 +56,11 @@ for fast development and testing.
 ```
 ├── src/occupancy/       Python package: data loading, preprocessing,
 │                        feature engineering, baselines, ML models, evaluation
-├── scripts/             Runnable experiment + sensitivity-analysis scripts
-├── tests/               pytest unit tests (26, all passing)
+├── scripts/             demo.py (live demo), run_experiment.py,
+│                        sensitivity_analysis.py, train_and_save_model.py
+├── models/              Pre-trained model + demo examples (committed, tiny)
+│                        — lets the demo run instantly, no raw data needed
+├── tests/               pytest unit tests (28, all passing)
 ├── data/raw/            Raw data (gitignored — see data/raw/README.md)
 ├── data/processed/      Small committed sample data, derived artefacts
 ├── docs/project_brief/  Unit-supplied project brief and dataset docs
@@ -74,10 +77,36 @@ Requires Python ≥ 3.10.
 pip install -e ".[dev]"
 ```
 
+## Live demo (for the presentation)
+
+```bash
+python scripts/demo.py
+```
+
+This is the thing to run live in the presentation/interview. It:
+
+1. **Loads a pre-trained model** from `models/occupancy_model.joblib`
+   (committed to the repo — starts in under a second, no need for the
+   raw 1.5GB file or to retrain anything).
+2. **Replays 15 real examples** from the test set (data the model never
+   trained on) — for each one, prints the room, the time, whether it was
+   occupied right now, what the model predicted, and what actually
+   happened. This is the live "does it actually work" evidence.
+3. **Lets you type in your own scenario** — pick a room, a time of day, a
+   day of week, and whether it's currently occupied — and the model
+   prints its live prediction. This is the "tune it yourself" part.
+
+If `models/occupancy_model.joblib` is ever missing or out of date, regenerate
+it (needs the raw CSV in `data/raw/`, takes ~2-3 minutes):
+
+```bash
+python scripts/train_and_save_model.py
+```
+
 ## Running the tests
 
 ```bash
-pytest                                          # 26 unit tests
+pytest                                          # 28 unit tests
 pytest --junitxml=reports/test_report.xml       # regenerate the committed test report
 ```
 
