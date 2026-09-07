@@ -1,5 +1,7 @@
 # MMA3001 Project — Room Occupancy Pattern Modelling
 
+[![CI](https://github.com/tgup0010-bot/mma3001-occupancy-prediction/actions/workflows/ci.yml/badge.svg)](https://github.com/tgup0010-bot/mma3001-occupancy-prediction/actions/workflows/ci.yml)
+
 Individual project for MMA3001 (Numerical Methods and Machine Learning),
 Monash University, 2026 S2.
 
