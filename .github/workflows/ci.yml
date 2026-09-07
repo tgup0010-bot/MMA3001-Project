@@ -1,0 +1,33 @@
+name: CI
+
+# Runs the test suite automatically on every push/PR to main, so the repo
+# always shows whether the code actually works -- not just that it was
+# committed. All 28 tests use synthetic or small committed sample data
+# (data/processed/), so this needs no access to the (gitignored) raw
+# dataset in data/raw/.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install package and dev dependencies
+        run: pip install -e ".[dev]"
+
+      - name: Run tests
+        run: pytest -v
