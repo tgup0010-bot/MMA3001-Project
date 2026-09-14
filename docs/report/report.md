@@ -356,53 +356,94 @@ where necessary, corrected by the student before submission, since an
 accurate account of one's own understanding and verification process
 cannot be fully authored by the tool that assisted with the work.)*
 
-**Tools used:** Claude (Claude Code), throughout the project's data
-exploration, coding and documentation phases.
+**Tools used:** Claude (Claude Code), across two phases: (1) the original
+build of the occupancy pipeline, models, and report; (2) a later session
+following up on a data-scoping question raised on the unit's EdStem forum
+("irming scope #81"), which produced the two supplementary analyses in
+§7 (sensor-matching and the BoM weather comparison) and this section's
+rewrite.
 
-**What it was used for:** exploring and profiling the raw CSV/XLSX files
-(row counts, date ranges, schema checks, cross-referencing the location
-spreadsheet against the actual sensor IDs present in the data); scaffolding
-the Python package (`src/occupancy`), its tests, and the two experiment
-scripts; drafting docstrings and this report's prose, grounded in the
-numbers the code actually produced.
+**What it was used for, phase 1:** exploring and profiling the raw
+CSV/XLSX files (row counts, date ranges, schema checks, cross-referencing
+the location spreadsheet against the actual sensor IDs present in the
+data); scaffolding the Python package (`src/occupancy`), its tests, and
+the experiment scripts; drafting docstrings and this report's prose,
+grounded in the numbers the code actually produced.
 
-**Approximate level of contribution:** high for code scaffolding and
-boilerplate (package structure, test structure, docstring formatting); the
-underlying analytical decisions — which dataset to use, how to define
-"occupied," why the environment data was excluded, which validation
-strategy to use, how to interpret the sensitivity-analysis results — were
-made in direct back-and-forth with the student, and the student directed
-each major scope decision (choice of Dataset 2 over Datasets 1/3, choice
-of occupancy-prediction over occupancy↔environment correlation, repo
-visibility and naming).
+**What it was used for, phase 2:** after the student asked Keenan Granland
+directly whether the occupancy-only scope was sufficient, and Keenan
+suggested three alternative directions on the forum, the student asked
+Claude to investigate whether any of them could be added. This involved:
+inspecting the raw environmental sensor JSON and the location spreadsheet
+directly (rather than assuming); building and running the sensor-matching
+correlation analysis (§7) end-to-end against the real 9M-row and 180k-row
+files; separately researching and fetching real Bureau of Meteorology data
+for the nearest station once BoM's bulk-download endpoint turned out to
+block automated access; checking a third idea (predicting sensor
+maintenance from battery-voltage degradation) against the real data before
+it was built, finding no usable signal, and not implementing it as a
+result; and rewriting this section and §7 to reflect all of the above.
+
+**Approximate level of contribution:** high for code scaffolding,
+boilerplate, and the mechanics of running large-file analyses (package
+structure, test structure, docstring formatting, data fetching). The
+underlying scope decisions were the student's throughout both phases, and
+in phase 2 specifically the student: raised the original scoping question
+independently on the forum before involving Claude; chose the
+sensor-matching analysis over a full pivot to an alternative project,
+after being shown the trade-offs; explicitly questioned whether a
+negative-result check was actually "enough" against what Keenan's
+suggestions implied, rather than accepting it at face value; requested the
+BoM comparison as a genuinely separate follow-up; and rejected the
+sensor-maintenance-prediction idea after seeing the real battery-voltage
+data showed no meaningful degradation trend, rather than having it built
+anyway. That sequence of the student pushing back on scope and asking
+"is this actually sufficient" is itself part of the record here, not
+smoothed over.
 
 **Why AI was used for these tasks:** profiling multiple large
 (100 MB–1.5 GB) files by hand is slow and error-prone; having the same
-checks (schema validation, cross-referencing IDs) run in code rather than
-manually is also more auditable — anyone can re-run `scripts/run_experiment.py`
-and get the same numbers.
+checks (schema validation, cross-referencing IDs, fetching and parsing
+external data) run in code rather than manually is also more auditable —
+anyone can re-run the scripts in `scripts/` and get the same numbers.
 
 **How AI-generated material was checked:** every numeric claim in this
 report was produced by actually running the corresponding script against
 the real dataset in this session (not generated from memory or estimated)
-— `reports/experiment_results.json` and `reports/sensitivity_results.json`
-are the raw evidence backing §§4–6. All code additions were exercised by
-the accompanying pytest suite (26 tests, currently all passing) before
-being trusted, and the pipeline was additionally run against real (not
-only synthetic) sample data, which is what caught the daylight-saving
-timestamp bug described in §7.
+— `reports/experiment_results.json`, `reports/sensitivity_results.json`,
+`reports/sensor_matching_results.json`, and
+`reports/weather_comparison_results.json` are the raw evidence backing
+§§4–7. All code additions were exercised by the accompanying pytest suite
+(49 tests, currently all passing — up from 26 after phase 1) before being
+trusted, and the pipeline was additionally run against real (not only
+synthetic) data throughout, which is what caught every bug described
+below.
 
-**Errors/limitations of AI assistance encountered:** the timestamp-parsing
-bug in §7 was itself an AI-authored oversight (assuming `pandas.read_csv`'s
-`parse_dates` would produce one consistent tz-aware column, which failed
-silently rather than raising) — it was only caught by insisting on running
-the real-data smoke test rather than trusting the unit tests alone.
+**Errors/limitations of AI assistance encountered:** four real bugs were
+introduced and then caught by running against real data rather than
+trusting synthetic tests alone: (1) the timestamp-parsing bug in §7
+(assuming `pandas.read_csv`'s `parse_dates` would produce one consistent
+tz-aware column across a daylight-saving transition, which failed silently
+instead of raising); (2) in phase 2, a sensor identifier being read as a
+number instead of a string, which silently broke both the sensor-to-room
+label lookup and the results' JSON export; (3) unhandled "failed read"
+JSON entries in the environmental sensor log (a reading with no actual
+value), which crashed the parser until handled explicitly; (4) an inverted
+lag-sign convention in the correlation search, caught only because a unit
+test's expected direction didn't match the actual output. None of these
+were caught by code review alone — each was only found by running the
+code against real data or a concrete test case and checking the actual
+output.
 
 **Decisions that remained the student's:** dataset selection, the specific
 engineering framing (energy-aware HVAC control) and its justification,
 acceptance of the room-mapping limitation as a reason to scope out the
-environment data, GitHub repository visibility/ownership, and final
-review of all numeric results before they were written into this report.
+environment data, GitHub repository visibility/ownership, final review of
+all numeric results before they were written into this report, and — in
+phase 2 — the decision of which of Keenan's three suggested directions to
+pursue, how far to take each one, and the decision to stop rather than
+build a fourth analysis (sensor maintenance) once the data didn't support
+it.
 
 ## References
 
