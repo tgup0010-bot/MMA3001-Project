@@ -10,11 +10,14 @@ validation methodology and results.
 
 from occupancy.baselines import MarkovBaseline, persistence_predict_proba
 from occupancy.data_loading import load_occupancy_log
+from occupancy.env_sensors import load_env_sensor_log, pivot_variable
 from occupancy.evaluation import chronological_split, evaluate_predictions
 from occupancy.features import build_supervised_dataset
 from occupancy.model import build_logistic_pipeline, build_random_forest_pipeline
 from occupancy.preprocessing import resample_occupancy
 from occupancy.rooms import room_label
+from occupancy.sensor_matching import build_correlation_matrix, lagged_correlation
+from occupancy.sensors import sensor_label
 
 __all__ = [
     "load_occupancy_log",
@@ -27,6 +30,11 @@ __all__ = [
     "chronological_split",
     "evaluate_predictions",
     "room_label",
+    "load_env_sensor_log",
+    "pivot_variable",
+    "sensor_label",
+    "build_correlation_matrix",
+    "lagged_correlation",
 ]
 
 __version__ = "0.1.0"
