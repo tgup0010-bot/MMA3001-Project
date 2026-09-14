@@ -1,0 +1,83 @@
+{
+  "bom_station": "Moorabbin Airport (086077)",
+  "bom_date_range": [
+    "2025-07-01",
+    "2026-09-14"
+  ],
+  "min_overlap_days": 14,
+  "results": {
+    "6012002000227": {
+      "Temperature": {
+        "correlation": NaN,
+        "n_days": 0,
+        "date_range": null
+      },
+      "Humidity": {
+        "correlation": NaN,
+        "n_days": 0,
+        "date_range": null
+      }
+    },
+    "6012002000241": {
+      "Temperature": {
+        "correlation": NaN,
+        "n_days": 0,
+        "date_range": null
+      },
+      "Humidity": {
+        "correlation": NaN,
+        "n_days": 0,
+        "date_range": null
+      }
+    },
+    "6012002000326": {
+      "Temperature": {
+        "correlation": 0.8408306176722732,
+        "n_days": 222,
+        "date_range": [
+          "2025-09-07",
+          "2026-04-22"
+        ]
+      },
+      "Humidity": {
+        "correlation": 0.6463759336958377,
+        "n_days": 222,
+        "date_range": [
+          "2025-09-07",
+          "2026-04-22"
+        ]
+      }
+    },
+    "6012002000777": {
+      "Temperature": {
+        "correlation": NaN,
+        "n_days": 0,
+        "date_range": null
+      },
+      "Humidity": {
+        "correlation": NaN,
+        "n_days": 0,
+        "date_range": null
+      }
+    },
+    "6012002000869": {
+      "Temperature": {
+        "correlation": NaN,
+        "n_days": 0,
+        "date_range": null
+      },
+      "Humidity": {
+        "correlation": NaN,
+        "n_days": 0,
+        "date_range": null
+      }
+    }
+  },
+  "sensor_labels": {
+    "6012002000227": "Sensor 6012002000227 (unidentified)",
+    "6012002000241": "Sensor 6012002000241 (unidentified)",
+    "6012002000326": "Sensor 6012002000326 (unidentified)",
+    "6012002000777": "Sensor 6012002000777 (unidentified)",
+    "6012002000869": "G.38 (Compactus_upper)"
+  }
+}

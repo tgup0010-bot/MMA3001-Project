@@ -58,6 +58,16 @@ for fast development and testing.
   for the full results and method. This also surfaced an unrelated
   data-quality issue: 2 of the 5 environmental sensors report every
   reading at the same stuck timestamp.
+- **A real external-data comparison was also run** against Bureau of
+  Meteorology observations for the nearest station (Moorabbin Airport,
+  fetched via `scripts/fetch_bom_weather.py` — BoM's bulk historical
+  endpoint blocks automated access, so only their ~15-month rolling public
+  archive is used). Only 1 of the 5 sensors (`6012002000326`) has data
+  overlapping that window; for it, indoor temperature/humidity correlate
+  r = +0.84 / +0.65 with real outdoor readings across 222 days — a
+  healthy, expected result supporting that sensor being genuine. See
+  report §7 and
+  [`reports/weather_comparison_results.json`](reports/weather_comparison_results.json).
 - A supplementary "Sample Data" batch (`PMV`, `Detailed` files) has no
   column headers and, as of writing, no clarification has been published
   on EdStem explaining what they represent. It is not used.
@@ -67,14 +77,17 @@ for fast development and testing.
 ```
 ├── src/occupancy/       Python package: data loading, preprocessing,
 │                        feature engineering, baselines, ML models, evaluation,
-│                        environmental sensor loading, sensor-matching analysis
+│                        environmental sensor loading, sensor-matching analysis,
+│                        BoM external-weather loading and comparison
 ├── scripts/             demo.py (live demo), run_experiment.py,
 │                        sensitivity_analysis.py, train_and_save_model.py,
-│                        sensor_matching_analysis.py
+│                        sensor_matching_analysis.py, fetch_bom_weather.py,
+│                        weather_comparison_analysis.py
 ├── models/              Pre-trained model + demo examples (committed, tiny)
 │                        — lets the demo run instantly, no raw data needed
-├── tests/               pytest unit tests (41, all passing)
-├── data/raw/            Raw data (gitignored — see data/raw/README.md)
+├── tests/               pytest unit tests (49, all passing)
+├── data/raw/            Raw data (gitignored — see data/raw/README.md);
+│                        data/raw/bom/ holds fetched BoM weather CSVs
 ├── data/processed/      Small committed sample data, derived artefacts
 ├── docs/project_brief/  Unit-supplied project brief and dataset docs
 ├── docs/api/            Generated HTML code documentation (pdoc)
@@ -191,6 +204,8 @@ comparison are in [`docs/report/MMA3001_Project_Report.docx`](docs/report/MMA300
 - [x] Runtime/model-complexity comparison across models
 - [x] Data-driven environmental-sensor-to-zone matching attempt (negative
       result, documented — see report §7)
+- [x] External-data (BoM) sensor validation for the one sensor with
+      overlapping dates (positive result — see report §7)
 - [x] Written report (`docs/report/MMA3001_Project_Report.docx`)
 - [x] AI-use reflection section in the report (student review still
       recommended before submission — see the report's note to reader)

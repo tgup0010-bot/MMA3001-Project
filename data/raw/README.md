@@ -20,3 +20,17 @@ To reproduce this folder, place the following files (as supplied in the
 
 This project's committed code only depends on `5occupancySensor_MayToDec2024_9MRows.csv`
 (and, for development, the small sample above).
+
+## `bom/` — external weather data (not course-supplied)
+
+`data/raw/bom/` holds real Bureau of Meteorology Daily Weather Observations
+CSVs for Moorabbin Airport (station 086077, the nearest official BoM
+station to Monash Clayton), fetched by `scripts/fetch_bom_weather.py` for
+the sensor-vs-outdoor-weather comparison (see report §7). This is public
+BoM data, not course-supplied, but is still gitignored here since it's
+easily reproduced by re-running the fetch script and there's no need to
+commit it. BoM's bulk historical-download service blocks automated
+requests as scraping; only their public monthly pages are used, and only
+for their rolling ~15-month free window — re-running the fetch script
+later will pull a different window than what the committed
+`reports/weather_comparison_results.json` was generated from.
