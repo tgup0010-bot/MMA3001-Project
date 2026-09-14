@@ -302,6 +302,26 @@ not a general claim that simpler models are always better.
   cadence), leaving them with no usable time series at all. This was not
   previously documented and is worth flagging to the unit separately from
   the room-mapping issue.
+- **An external-data comparison (Keenan's third suggestion) validated one
+  sensor's plausibility, and confirms the other four can't be checked this
+  way.** BoM's bulk historical-download service actively blocks automated
+  requests (confirmed directly — it returns an explicit anti-scraping
+  refusal); only their public monthly Daily Weather Observations pages are
+  fetchable, and only for a rolling ~15-month window
+  (`scripts/fetch_bom_weather.py`, real data for Moorabbin Airport, station
+  086077 — the nearest official BoM station to Monash Clayton). Checking
+  which sensors' own data actually falls inside that window: only sensor
+  `6012002000326` does (the two stuck-clock sensors and `G.38` have no
+  overlap at all; `6012002000241` ends two months too early). For that one
+  sensor, indoor temperature correlates **r = +0.84** and indoor humidity
+  **r = +0.65** with real outdoor Moorabbin readings across 222 overlapping
+  days (`reports/weather_comparison_results.json`) — a strong, expected
+  result (a climate-controlled indoor space should track outdoor weather
+  loosely, not tightly or not at all) that supports this sensor's readings
+  being genuine and sane, not corrupted like its two frozen-timestamp
+  siblings. The other four sensors simply have no real external data
+  available to check them against, which is itself worth stating plainly
+  rather than leaving unexamined.
 - **3 of 5 occupancy zones have no known physical identity.** The model
   still learns and is evaluated per-zone for these, but the report cannot
   contextualise their results physically (e.g. "this is a lecture theatre
