@@ -9,9 +9,16 @@ validation methodology and results.
 """
 
 from occupancy.baselines import MarkovBaseline, persistence_predict_proba
+from occupancy.co2_models import (
+    build_decision_tree_regression_pipeline,
+    build_linear_regression_pipeline,
+    build_neural_network_regression_pipeline,
+    build_svr_pipeline,
+)
+from occupancy.co2_regression import build_co2_supervised_dataset, building_occupancy_series, co2_series
 from occupancy.data_loading import load_occupancy_log
 from occupancy.env_sensors import load_env_sensor_log, pivot_variable
-from occupancy.evaluation import chronological_split, evaluate_predictions
+from occupancy.evaluation import chronological_split, evaluate_predictions, evaluate_regression_predictions
 from occupancy.external_weather import load_bom_weather
 from occupancy.features import build_supervised_dataset
 from occupancy.model import build_logistic_pipeline, build_random_forest_pipeline
@@ -40,6 +47,14 @@ __all__ = [
     "load_bom_weather",
     "compare_to_bom",
     "daily_indoor_series",
+    "build_linear_regression_pipeline",
+    "build_decision_tree_regression_pipeline",
+    "build_svr_pipeline",
+    "build_neural_network_regression_pipeline",
+    "building_occupancy_series",
+    "co2_series",
+    "build_co2_supervised_dataset",
+    "evaluate_regression_predictions",
 ]
 
 __version__ = "0.1.0"
