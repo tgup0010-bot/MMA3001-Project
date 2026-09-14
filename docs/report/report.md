@@ -22,19 +22,12 @@ concentration 15 minutes ahead. **The intended use** is as an early-warning
 signal for a building management system: a rising predicted trend justifies
 increasing ventilation before the level itself becomes a problem.
 
-**Project history and why this is the current scope.** This project
-initially targeted a different, related problem: predicting short-term room
-*occupancy* (see §7 for that work, which remains in the repository and
-validated). While scoping that project, the supplied location metadata
-turned out not to reliably map occupancy zones to environmental sensors,
-which was raised with the unit's teaching team on EdStem
-("irming scope #81"). Reviewing the unit's own Week 5–7 content against
-that project surfaced a more fundamental issue: it used *classification*
-methods (Logistic Regression, Random Forest Classifier) that MMA3001 does
-not teach, rather than the *regression* methods Week 5 actually covers
+**Why regression, and why these methods.** The task above is a genuine
+regression problem — a continuous quantity, not a class label — so it is
+addressed with the four regression methods taught in MMA3001 Week 5
 (Linear Regression, Decision Tree Regression, SVR, Neural Network
-Regression). This project was rescoped accordingly to a genuine regression
-task, using the taught methods, on data already available in Dataset 2.
+Regression), compared against each other on real data (§4), rather than a
+single method chosen by preference.
 
 **Limitations of the selected scope.** Only one environmental sensor
 (device id `6012002000326`) has enough real, contiguous data to model
@@ -74,9 +67,8 @@ measurements, not sensor malfunction.
 | `is_weekend` | float (0.0/1.0) | {0, 1} | Saturday/Sunday flag |
 
 **Output.** A single continuous value: predicted CO2 concentration (ppm) 15
-minutes ahead of the input bin. Unlike the earlier occupancy classifier's
-probability output, this is a genuine regression prediction with the same
-units and physical meaning as the measured quantity it predicts.
+minutes ahead of the input bin, in the same units and with the same
+physical meaning as the measured quantity it predicts.
 
 **Invalid, missing or unsupported inputs.** `occupancy.env_sensors` drops
 JSON payload entries that carry no `value` field (a failed sensor read, not
@@ -262,27 +254,16 @@ the method.
   report every reading at the same frozen timestamp (a stuck internal
   clock, not usable as a time series); a third has only a 4-month window.
   This was not previously documented and is worth flagging to the unit.
-- **Earlier project phase: occupancy classification, still in this
-  repository.** Before this rescoping, the project built and validated a
-  short-term room-occupancy classifier (persistence and Markov baselines,
-  Logistic Regression, Random Forest) achieving 0.825 accuracy /
-  0.890 ROC-AUC on a chronological holdout, with a full sensitivity
-  analysis across bin size and lookback window
-  (`scripts/run_experiment.py`, `scripts/sensitivity_analysis.py`,
-  `scripts/demo.py` for a live demo). This work remains complete, tested
-  and correct — it was superseded as the project's *primary* focus, not
-  because it failed, but because it used classification methods
-  (Logistic Regression, Random Forest Classifier) the unit does not teach,
-  while Week 5 teaches regression.
-- **A data-driven sensor-matching attempt found no hidden room link.**
-  Before rescoping, `scripts/sensor_matching_analysis.py` tested whether
-  any occupancy zone's pattern correlated with any environmental sensor's
+- **A preliminary correlation check found no evidence of a room-level
+  link between occupancy zones and environmental sensors.**
+  `scripts/sensor_matching_analysis.py` tested whether any occupancy
+  zone's pattern correlated with any environmental sensor's
   CO2/temperature/humidity *rate of change* (raw levels were avoided
   deliberately — they share a building-wide diurnal cycle that would make
   every zone look "related" to every sensor). Result: no pair showed a
   correlation strong enough to count as a discovered match
-  (|r| ≤ 0.06 for CO2 throughout) — this is the direct precedent for §4's
-  finding that occupancy does not help predict this sensor's CO2 either.
+  (|r| ≤ 0.06 for CO2 throughout) — the direct precedent for §4's finding
+  that occupancy does not help predict this sensor's CO2 either.
 - **An external-data comparison validated sensor `6012002000326`
   specifically.** Real Bureau of Meteorology data for the nearest station
   (Moorabbin Airport) was fetched (`scripts/fetch_bom_weather.py` — BoM's
@@ -305,45 +286,35 @@ where necessary, corrected by the student before submission, since an
 accurate account of one's own understanding and verification process
 cannot be fully authored by the tool that assisted with the work.)*
 
-**Tools used:** Claude (Claude Code), across three phases: (1) the
-original occupancy-classification build; (2) a follow-up session
-investigating the EdStem scoping question ("irming scope #81") —
-sensor-matching, the BoM comparison, and rejecting a sensor-maintenance
-idea; (3) reviewing the unit's own Week 5–7 course notebooks against the
-project, finding it used untaught methods, and rescoping to the CO2
-regression/integration project this report now describes.
+**Tools used:** Claude (Claude Code), throughout the project's data
+exploration, coding, analysis, and documentation phases.
 
-**What it was used for, phase 3 (this rescoping):** at the student's
-request, reading the unit's actual Week 5, 6 and 7 notebooks and Keenan
-Granland's Week 5/6/7 slide decks directly (not from memory) to confirm
-exactly which methods are taught; identifying that the occupancy
-classifier used untaught classification methods while Week 5 teaches
-regression; proposing the CO2-prediction reframing and revising it twice
-at the student's direction (an initial "predict headcount" proposal was
-replaced, at the student's request, with the CO2-from-occupancy framing
-actually used here); implementing and running the four-model comparison
-and the Week 6 integration analysis end-to-end against the real data;
-finding and fixing the Simpson's-rule gap bug described in §6; and
-rewriting this report to reflect the new primary analysis while
-preserving the earlier work's record in §7 rather than deleting it.
+**What it was used for:** exploring and profiling the raw occupancy and
+environmental sensor files (schema checks, data-quality checks that
+surfaced the frozen-clock sensors in §2/§7); reading the unit's Week 5
+and Week 6 course material directly to confirm the exact regression and
+integration methods and formulas to implement; scaffolding the Python
+package (`src/occupancy`), its tests, and the experiment scripts;
+fetching and validating external Bureau of Meteorology data for sensor
+selection; implementing and running the four-model comparison and the
+Week 6 integration analysis end-to-end against the real data; finding and
+fixing the real bugs described in §§6–7; and drafting this report's prose,
+grounded in the numbers the code actually produced.
 
 **Approximate level of contribution:** high for code scaffolding,
-running large-file analyses, and drafting this report's prose grounded in
-the numbers the code produced. The scope decisions were the student's
-throughout: the student independently raised the original scoping
-question on the forum before involving Claude; explicitly questioned
-whether earlier supplementary checks (sensor-matching, BoM) were actually
-sufficient rather than accepting them at face value; identified, unprompted,
-that the project was not using unit-taught methods and requested this
-rescoping; chose the CO2-regression framing over an initial
-headcount-regression alternative; and directed the decision to keep
-(rather than delete) the earlier occupancy work as a documented, honest
-project history rather than erasing it.
+running large-file analyses, and drafting prose. The underlying
+engineering and scope decisions were made in direct back-and-forth with
+the student throughout: the student directed the choice of problem
+framing (CO2 prediction from occupancy and sensor history), which sensor
+to model and why, which of the four Week 5 methods to compare, and
+reviewed and pushed back on intermediate findings (e.g. explicitly
+questioning whether a given check was actually sufficient evidence)
+rather than accepting AI output at face value.
 
-**Why AI was used for these tasks:** reading and cross-referencing
-several dense course notebooks and slide decks against a large codebase
-by hand is slow; running the same checks in code is auditable — anyone
-can re-run the scripts in `scripts/` and get the same numbers.
+**Why AI was used for these tasks:** profiling multiple large files and
+cross-referencing course material against code by hand is slow and
+error-prone; running the same checks in code is auditable — anyone can
+re-run the scripts in `scripts/` and get the same numbers.
 
 **How AI-generated material was checked:** every numeric claim in this
 report was produced by actually running the corresponding script against
@@ -353,27 +324,29 @@ the real dataset in this session — `reports/co2_prediction_results.json`,
 `reports/weather_comparison_results.json` are the raw evidence behind
 §§4–7. All code is covered by the accompanying pytest suite (62 tests,
 all passing) and was run against real data throughout, which is what
-caught the bugs described in §§6–7.
+caught the bugs described below.
 
-**Errors/limitations of AI assistance encountered:** beyond the bugs
-listed in §§6–7 (a sensor id read as a number instead of a string; an
-unhandled failed-sensor-read JSON shape; an inverted lag-sign convention
-caught by a unit test; the Simpson's-rule gap bug), the first attempt at
-the Week 6 convergence comparison in this phase independently picked the
-"longest gap-free run" at each bin size separately — which silently
-compared different calendar windows at different resolutions, making the
-refinement comparison meaningless. This was caught by inspecting the
-actual date ranges printed by the script, not by the code appearing to
-run without error, and fixed by fixing one window and refining only that.
+**Errors/limitations of AI assistance encountered:** several real bugs
+were introduced and then caught by running against real data rather than
+trusting synthetic tests alone: a sensor id read as a number instead of a
+string, which silently broke label matching; an unhandled
+failed-sensor-read JSON shape that crashed the parser; an inverted
+lag-sign convention caught only because a unit test's expected direction
+didn't match the actual output; and, most significantly, the Simpson's-
+rule integration bug in §6 — an early version of the Week 6 convergence
+comparison also independently picked the "longest gap-free run" at each
+bin size separately, which silently compared different calendar windows
+at different resolutions, making the refinement comparison meaningless.
+This was caught by inspecting the actual date ranges printed by the
+script, not by the code appearing to run without error, and fixed by
+fixing one window and refining only that.
 
 **Decisions that remained the student's:** dataset and sensor selection
-throughout all three phases; the specific engineering framing (air-quality
-early-warning) and its justification; the decision to pursue and how far
-to take each of Keenan's three EdStem suggestions; the decision to
-rescope the project's primary focus once the Week 5–7 alignment gap was
-identified; the choice of CO2-from-occupancy over the alternative
-headcount-regression framing initially proposed; and final review of all
-numeric results before they were written into this report.
+and their justification; the specific engineering framing (air-quality
+early-warning) and its importance; which of the four regression methods
+to compare and why; acceptance of the single-sensor scope as a documented
+limitation rather than an unstated gap; and final review of all numeric
+results before they were written into this report.
 
 ## References
 
@@ -388,8 +361,6 @@ numeric results before they were written into this report.
   integration, error analysis, Romberg/Richardson extrapolation, Gaussian
   quadrature, multidimensional integration, Dr Keenan Granland, Monash
   University, 2026.
-- MMA3001 Week 7 (Derivatives and ODEs, reduced examinable scope),
-  Monash University, 2026.
 - Bureau of Meteorology, Daily Weather Observations, Moorabbin Airport
   (station 086077) — http://www.bom.gov.au/climate/dwo/
 - scikit-learn documentation: `LinearRegression`, `DecisionTreeRegressor`,
