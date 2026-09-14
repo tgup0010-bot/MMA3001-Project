@@ -1,0 +1,115 @@
+"""Attempt to link environmental sensors to occupancy zones by data, not metadata.
+
+The supplied location spreadsheet cannot map most occupancy zones to the
+environmental sensors (see README, Known data limitations). This script
+tests the alternative Keenan Granland suggested on the EdStem forum
+("irming scope #81"): rather than assume a room correspondence, look for
+one in the data itself, by correlating each zone's occupancy pattern
+against each sensor's readings.
+
+See occupancy.sensor_matching for the method (lagged correlation of the
+CO2 *rate of change*, not its raw level -- see that module's docstring for
+why the raw level would be misleading).
+
+Usage:
+    python scripts/sensor_matching_analysis.py
+"""
+
+from __future__ import annotations
+
+import json
+import time
+from pathlib import Path
+
+import pandas as pd
+
+from occupancy.data_loading import load_occupancy_log
+from occupancy.env_sensors import load_env_sensor_log
+from occupancy.preprocessing import resample_occupancy
+from occupancy.rooms import room_label
+from occupancy.sensor_matching import build_correlation_matrix, best_match_per_room
+from occupancy.sensors import sensor_label
+
+OCC_RAW_PATH = Path("data/raw/5occupancySensor_MayToDec2024_9MRows.csv")
+ENV_RAW_PATH = Path("data/raw/5EnvSensor_MayToDec2024_180kRows.csv")
+RESULTS_PATH = Path("reports/sensor_matching_results.json")
+
+BIN_SIZE = "15min"
+VARIABLES_TESTED = ("Carbon dioxide", "Temperature", "Humidity")
+
+
+def timed(label: str, fn, *args, **kwargs):
+    start = time.perf_counter()
+    result = fn(*args, **kwargs)
+    elapsed = time.perf_counter() - start
+    print(f"[{elapsed:6.1f}s] {label}")
+    return result, elapsed
+
+
+def main() -> None:
+    timings: dict[str, float] = {}
+
+    occ_df, t = timed("load_occupancy_log", load_occupancy_log, OCC_RAW_PATH)
+    timings["load_occupancy"] = t
+
+    env_long, t = timed("load_env_sensor_log", load_env_sensor_log, ENV_RAW_PATH)
+    timings["load_env"] = t
+    print(f"  env rows={len(env_long):,}  sensors={env_long['sensorid'].nunique()}")
+
+    occ_resampled, t = timed(
+        "resample_occupancy", resample_occupancy, occ_df, bin_size=BIN_SIZE
+    )
+    timings["resample_occupancy"] = t
+    rooms = sorted(occ_resampled["floorspaceid"].unique())
+    print(f"  zones={len(rooms)}: {[room_label(r) for r in rooms]}")
+
+    all_results = {}
+    for variable in VARIABLES_TESTED:
+        print(f"\n=== Testing variable: {variable} ===")
+        (matrix, detail), t = timed(
+            f"build_correlation_matrix ({variable})",
+            build_correlation_matrix,
+            occ_resampled,
+            env_long,
+            variable=variable,
+            bin_size=BIN_SIZE,
+        )
+        timings[f"correlate_{variable}"] = t
+
+        display = matrix.rename(index=room_label, columns=sensor_label)
+        print(display.to_string(float_format=lambda x: f"{x:+.3f}"))
+
+        summary = best_match_per_room(matrix, detail)
+        summary_display = summary.copy()
+        summary_display.index = [room_label(r) for r in summary_display.index]
+        summary_display["best_sensor"] = summary_display["best_sensor"].map(
+            lambda s: sensor_label(s) if s is not None else None
+        )
+        print("\nBest-correlated sensor per zone:")
+        print(summary_display.to_string(float_format=lambda x: f"{x:+.3f}"))
+
+        all_results[variable] = {
+            "matrix": matrix.to_dict(),
+            "best_match_per_room": summary.reset_index().to_dict(orient="records"),
+        }
+
+    RESULTS_PATH.parent.mkdir(exist_ok=True)
+    RESULTS_PATH.write_text(
+        json.dumps(
+            {
+                "bin_size": BIN_SIZE,
+                "variables_tested": list(VARIABLES_TESTED),
+                "zones": {r: room_label(r) for r in rooms},
+                "sensors": {s: sensor_label(s) for s in env_long["sensorid"].unique()},
+                "timings_seconds": timings,
+                "results": all_results,
+            },
+            indent=2,
+            default=str,
+        )
+    )
+    print(f"\nSaved -> {RESULTS_PATH}")
+
+
+if __name__ == "__main__":
+    main()

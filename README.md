@@ -47,8 +47,17 @@ for fast development and testing.
 - The environmental sensor data's 5 sensors don't resolve to the same rooms
   as the occupancy zones (only 1 of 5 could be matched at all, to a
   different room, `G.38`), so an occupancy↔environment relationship could
-  not be validated against the supplied metadata and was deliberately
-  **not** attempted — see the report for the full reasoning.
+  not be validated against the supplied metadata, and joining the two by
+  assuming a mapping was deliberately **not** attempted.
+- **A data-driven alternative was tried instead of the metadata join**
+  (`scripts/sensor_matching_analysis.py`): correlating each zone's
+  occupancy pattern against each sensor's readings directly, to see if the
+  data itself reveals a room correspondence the spreadsheet couldn't. It
+  found no evidence of one — see the report §7 and
+  [`reports/sensor_matching_results.json`](reports/sensor_matching_results.json)
+  for the full results and method. This also surfaced an unrelated
+  data-quality issue: 2 of the 5 environmental sensors report every
+  reading at the same stuck timestamp.
 - A supplementary "Sample Data" batch (`PMV`, `Detailed` files) has no
   column headers and, as of writing, no clarification has been published
   on EdStem explaining what they represent. It is not used.
@@ -57,12 +66,14 @@ for fast development and testing.
 
 ```
 ├── src/occupancy/       Python package: data loading, preprocessing,
-│                        feature engineering, baselines, ML models, evaluation
+│                        feature engineering, baselines, ML models, evaluation,
+│                        environmental sensor loading, sensor-matching analysis
 ├── scripts/             demo.py (live demo), run_experiment.py,
-│                        sensitivity_analysis.py, train_and_save_model.py
+│                        sensitivity_analysis.py, train_and_save_model.py,
+│                        sensor_matching_analysis.py
 ├── models/              Pre-trained model + demo examples (committed, tiny)
 │                        — lets the demo run instantly, no raw data needed
-├── tests/               pytest unit tests (28, all passing)
+├── tests/               pytest unit tests (41, all passing)
 ├── data/raw/            Raw data (gitignored — see data/raw/README.md)
 ├── data/processed/      Small committed sample data, derived artefacts
 ├── docs/project_brief/  Unit-supplied project brief and dataset docs
@@ -178,6 +189,8 @@ comparison are in [`docs/report/MMA3001_Project_Report.docx`](docs/report/MMA300
 - [x] Chronological validation split + evaluation metrics
 - [x] Sensitivity analysis: bin size and lookback-window trade-offs
 - [x] Runtime/model-complexity comparison across models
+- [x] Data-driven environmental-sensor-to-zone matching attempt (negative
+      result, documented — see report §7)
 - [x] Written report (`docs/report/MMA3001_Project_Report.docx`)
 - [x] AI-use reflection section in the report (student review still
       recommended before submission — see the report's note to reader)

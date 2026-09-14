@@ -253,16 +253,55 @@ not a general claim that simpler models are always better.
 
 ## 7. Limitations and Lessons Learned
 
-- **Environmental data was deliberately not used.** The environmental
-  sensor CSV's 5 sensors were cross-referenced against the same location
-  spreadsheet; only 1 could be matched to a physical room (`G.38`), and it
-  does not coincide with either of the two occupancy rooms that *could* be
-  identified (`G.20`, `G.25`). Attempting an occupancy↔environment model
-  would have required guessing which environmental sensor belongs to which
-  occupancy zone — an unverifiable assumption the brief specifically warns
-  against relying on. This was decided *before* writing any modelling
-  code for that direction, based on directly inspecting the mapping
-  spreadsheet, rather than discovered after wasted effort.
+- **Environmental data was deliberately not used for occupancy prediction.**
+  The environmental sensor CSV's 5 sensors were cross-referenced against
+  the same location spreadsheet; only 1 could be matched to a physical
+  room (`G.38`), and it does not coincide with either of the two occupancy
+  rooms that *could* be identified (`G.20`, `G.25`). Joining the two
+  datasets by assuming a room correspondence between the remaining
+  unmatched sensors and zones would have been an unverifiable guess — this
+  was decided *before* writing any modelling code for that direction,
+  based on directly inspecting the mapping spreadsheet.
+- **A data-driven sensor-matching attempt was made, and found no
+  supporting evidence for a hidden mapping.** This scope decision was
+  raised on the unit's EdStem forum ("irming scope #81"); Keenan Granland
+  suggested trying to link sensors to zones by matching the *data itself*
+  rather than the (unfixable) metadata. This was attempted directly:
+  `scripts/sensor_matching_analysis.py` correlates each occupancy zone's
+  binary occupied/vacant signal against each environmental sensor's
+  *rate of change* (not raw level — see below) in Carbon dioxide,
+  Temperature and Humidity, searching lags of up to 1 hour in either
+  direction to allow for HVAC/room-mixing delay. Raw levels were
+  deliberately not used for this test: CO2 and temperature both follow a
+  building-wide diurnal cycle (busier, warmer during work hours in every
+  room), so correlating levels would find every zone "related" to every
+  sensor through that shared confound rather than genuine co-location;
+  the first difference is far more specific to actual arrival/departure
+  events.
+
+  Full results are in `reports/sensor_matching_results.json`; the
+  headline finding is negative. Carbon dioxide — physiologically the most
+  direct occupancy signal — showed essentially no relationship with any
+  zone (\|r\| ≤ 0.06 for every zone×sensor pair, indistinguishable from
+  noise). Temperature showed a somewhat higher correlation for some pairs
+  (up to r = 0.27), but this is consistent with the shared building-wide
+  climate-control confound described above rather than room-specific
+  co-location, since it appears for multiple unrelated zone/sensor
+  combinations rather than concentrating on one. **No zone×sensor pair
+  showed correlation strong and specific enough to justify treating it as
+  a discovered room match.** This is a genuine, if negative, result: it
+  turns the original scoping decision from "we assumed no relationship
+  exists because the metadata doesn't confirm one" into "we tested for a
+  relationship and did not find one" — a stronger basis for the
+  occupancy-only scope than the metadata gap alone.
+
+  The analysis also surfaced an independent data-quality problem in the
+  environmental sensor log: 2 of the 5 sensors (`6012002000227`,
+  `6012002000777`) report **every one of their ~10,000–21,000 readings at
+  the exact same timestamp** (a stuck internal clock, not a real reading
+  cadence), leaving them with no usable time series at all. This was not
+  previously documented and is worth flagging to the unit separately from
+  the room-mapping issue.
 - **3 of 5 occupancy zones have no known physical identity.** The model
   still learns and is evaluated per-zone for these, but the report cannot
   contextualise their results physically (e.g. "this is a lecture theatre

@@ -1,0 +1,260 @@
+{
+  "bin_size": "15min",
+  "variables_tested": [
+    "Carbon dioxide",
+    "Temperature",
+    "Humidity"
+  ],
+  "zones": {
+    "0f3f37f8-0335-41e0-ae87-a1d677dfc7d7": "Zone 0f3f37f8 (unidentified)",
+    "227f1068-9e41-469f-bef0-275f27a0bdba": "G.25 (Keenan Lab)",
+    "3e5a14df-4b14-4ea5-bb9d-46577c6dc9c8": "Zone 3e5a14df (unidentified)",
+    "941f0352-bb69-47d0-a9c5-ac29eb4f7319": "Zone 941f0352 (unidentified)",
+    "cca1ac3e-f81f-4ebb-aa2b-8b0bf3e9e53b": "G.20"
+  },
+  "sensors": {
+    "6012002000227": "Sensor 6012002000227 (unidentified)",
+    "6012002000241": "Sensor 6012002000241 (unidentified)",
+    "6012002000326": "Sensor 6012002000326 (unidentified)",
+    "6012002000777": "Sensor 6012002000777 (unidentified)",
+    "6012002000869": "G.38 (Compactus_upper)"
+  },
+  "timings_seconds": {
+    "load_occupancy": 124.4334014000051,
+    "load_env": 19.775884100003168,
+    "resample_occupancy": 18.81368199999997,
+    "correlate_Carbon dioxide": 10.756059999999707,
+    "correlate_Temperature": 9.868236100002832,
+    "correlate_Humidity": 10.168890599998122
+  },
+  "results": {
+    "Carbon dioxide": {
+      "matrix": {
+        "6012002000227": {
+          "0f3f37f8-0335-41e0-ae87-a1d677dfc7d7": NaN,
+          "227f1068-9e41-469f-bef0-275f27a0bdba": NaN,
+          "3e5a14df-4b14-4ea5-bb9d-46577c6dc9c8": NaN,
+          "941f0352-bb69-47d0-a9c5-ac29eb4f7319": NaN,
+          "cca1ac3e-f81f-4ebb-aa2b-8b0bf3e9e53b": NaN
+        },
+        "6012002000241": {
+          "0f3f37f8-0335-41e0-ae87-a1d677dfc7d7": NaN,
+          "227f1068-9e41-469f-bef0-275f27a0bdba": NaN,
+          "3e5a14df-4b14-4ea5-bb9d-46577c6dc9c8": NaN,
+          "941f0352-bb69-47d0-a9c5-ac29eb4f7319": NaN,
+          "cca1ac3e-f81f-4ebb-aa2b-8b0bf3e9e53b": NaN
+        },
+        "6012002000326": {
+          "0f3f37f8-0335-41e0-ae87-a1d677dfc7d7": -0.024413535544558055,
+          "227f1068-9e41-469f-bef0-275f27a0bdba": 0.01025847874127625,
+          "3e5a14df-4b14-4ea5-bb9d-46577c6dc9c8": NaN,
+          "941f0352-bb69-47d0-a9c5-ac29eb4f7319": -0.029077475208295588,
+          "cca1ac3e-f81f-4ebb-aa2b-8b0bf3e9e53b": -0.021915040451854155
+        },
+        "6012002000777": {
+          "0f3f37f8-0335-41e0-ae87-a1d677dfc7d7": NaN,
+          "227f1068-9e41-469f-bef0-275f27a0bdba": NaN,
+          "3e5a14df-4b14-4ea5-bb9d-46577c6dc9c8": NaN,
+          "941f0352-bb69-47d0-a9c5-ac29eb4f7319": NaN,
+          "cca1ac3e-f81f-4ebb-aa2b-8b0bf3e9e53b": NaN
+        },
+        "6012002000869": {
+          "0f3f37f8-0335-41e0-ae87-a1d677dfc7d7": 0.03690940227152274,
+          "227f1068-9e41-469f-bef0-275f27a0bdba": 0.04508288801682796,
+          "3e5a14df-4b14-4ea5-bb9d-46577c6dc9c8": 0.05126158282316972,
+          "941f0352-bb69-47d0-a9c5-ac29eb4f7319": 0.06013295077310874,
+          "cca1ac3e-f81f-4ebb-aa2b-8b0bf3e9e53b": 0.052912532925372395
+        }
+      },
+      "best_match_per_room": [
+        {
+          "room": "0f3f37f8-0335-41e0-ae87-a1d677dfc7d7",
+          "best_sensor": "6012002000869",
+          "correlation": 0.03690940227152274,
+          "best_lag": -2,
+          "n_bins": 8431
+        },
+        {
+          "room": "227f1068-9e41-469f-bef0-275f27a0bdba",
+          "best_sensor": "6012002000869",
+          "correlation": 0.04508288801682796,
+          "best_lag": -3,
+          "n_bins": 8131
+        },
+        {
+          "room": "3e5a14df-4b14-4ea5-bb9d-46577c6dc9c8",
+          "best_sensor": "6012002000869",
+          "correlation": 0.05126158282316972,
+          "best_lag": 0,
+          "n_bins": 3301
+        },
+        {
+          "room": "941f0352-bb69-47d0-a9c5-ac29eb4f7319",
+          "best_sensor": "6012002000869",
+          "correlation": 0.06013295077310874,
+          "best_lag": -2,
+          "n_bins": 7531
+        },
+        {
+          "room": "cca1ac3e-f81f-4ebb-aa2b-8b0bf3e9e53b",
+          "best_sensor": "6012002000869",
+          "correlation": 0.052912532925372395,
+          "best_lag": -2,
+          "n_bins": 6173
+        }
+      ]
+    },
+    "Temperature": {
+      "matrix": {
+        "6012002000227": {
+          "0f3f37f8-0335-41e0-ae87-a1d677dfc7d7": NaN,
+          "227f1068-9e41-469f-bef0-275f27a0bdba": NaN,
+          "3e5a14df-4b14-4ea5-bb9d-46577c6dc9c8": NaN,
+          "941f0352-bb69-47d0-a9c5-ac29eb4f7319": NaN,
+          "cca1ac3e-f81f-4ebb-aa2b-8b0bf3e9e53b": NaN
+        },
+        "6012002000241": {
+          "0f3f37f8-0335-41e0-ae87-a1d677dfc7d7": NaN,
+          "227f1068-9e41-469f-bef0-275f27a0bdba": NaN,
+          "3e5a14df-4b14-4ea5-bb9d-46577c6dc9c8": NaN,
+          "941f0352-bb69-47d0-a9c5-ac29eb4f7319": NaN,
+          "cca1ac3e-f81f-4ebb-aa2b-8b0bf3e9e53b": NaN
+        },
+        "6012002000326": {
+          "0f3f37f8-0335-41e0-ae87-a1d677dfc7d7": 0.21175140198400091,
+          "227f1068-9e41-469f-bef0-275f27a0bdba": 0.03846317445539721,
+          "3e5a14df-4b14-4ea5-bb9d-46577c6dc9c8": NaN,
+          "941f0352-bb69-47d0-a9c5-ac29eb4f7319": 0.27150986432939245,
+          "cca1ac3e-f81f-4ebb-aa2b-8b0bf3e9e53b": 0.1863230467752548
+        },
+        "6012002000777": {
+          "0f3f37f8-0335-41e0-ae87-a1d677dfc7d7": NaN,
+          "227f1068-9e41-469f-bef0-275f27a0bdba": NaN,
+          "3e5a14df-4b14-4ea5-bb9d-46577c6dc9c8": NaN,
+          "941f0352-bb69-47d0-a9c5-ac29eb4f7319": NaN,
+          "cca1ac3e-f81f-4ebb-aa2b-8b0bf3e9e53b": NaN
+        },
+        "6012002000869": {
+          "0f3f37f8-0335-41e0-ae87-a1d677dfc7d7": 0.03559833450954779,
+          "227f1068-9e41-469f-bef0-275f27a0bdba": -0.036991842775328465,
+          "3e5a14df-4b14-4ea5-bb9d-46577c6dc9c8": 0.10608936524787911,
+          "941f0352-bb69-47d0-a9c5-ac29eb4f7319": 0.05409051373475306,
+          "cca1ac3e-f81f-4ebb-aa2b-8b0bf3e9e53b": 0.06729441962998957
+        }
+      },
+      "best_match_per_room": [
+        {
+          "room": "0f3f37f8-0335-41e0-ae87-a1d677dfc7d7",
+          "best_sensor": "6012002000326",
+          "correlation": 0.21175140198400091,
+          "best_lag": -3,
+          "n_bins": 13292
+        },
+        {
+          "room": "227f1068-9e41-469f-bef0-275f27a0bdba",
+          "best_sensor": "6012002000326",
+          "correlation": 0.03846317445539721,
+          "best_lag": -4,
+          "n_bins": 18056
+        },
+        {
+          "room": "3e5a14df-4b14-4ea5-bb9d-46577c6dc9c8",
+          "best_sensor": "6012002000869",
+          "correlation": 0.10608936524787911,
+          "best_lag": -1,
+          "n_bins": 3302
+        },
+        {
+          "room": "941f0352-bb69-47d0-a9c5-ac29eb4f7319",
+          "best_sensor": "6012002000326",
+          "correlation": 0.27150986432939245,
+          "best_lag": -3,
+          "n_bins": 15243
+        },
+        {
+          "room": "cca1ac3e-f81f-4ebb-aa2b-8b0bf3e9e53b",
+          "best_sensor": "6012002000326",
+          "correlation": 0.1863230467752548,
+          "best_lag": -4,
+          "n_bins": 11888
+        }
+      ]
+    },
+    "Humidity": {
+      "matrix": {
+        "6012002000227": {
+          "0f3f37f8-0335-41e0-ae87-a1d677dfc7d7": NaN,
+          "227f1068-9e41-469f-bef0-275f27a0bdba": NaN,
+          "3e5a14df-4b14-4ea5-bb9d-46577c6dc9c8": NaN,
+          "941f0352-bb69-47d0-a9c5-ac29eb4f7319": NaN,
+          "cca1ac3e-f81f-4ebb-aa2b-8b0bf3e9e53b": NaN
+        },
+        "6012002000241": {
+          "0f3f37f8-0335-41e0-ae87-a1d677dfc7d7": NaN,
+          "227f1068-9e41-469f-bef0-275f27a0bdba": NaN,
+          "3e5a14df-4b14-4ea5-bb9d-46577c6dc9c8": NaN,
+          "941f0352-bb69-47d0-a9c5-ac29eb4f7319": NaN,
+          "cca1ac3e-f81f-4ebb-aa2b-8b0bf3e9e53b": NaN
+        },
+        "6012002000326": {
+          "0f3f37f8-0335-41e0-ae87-a1d677dfc7d7": -0.11683337258994493,
+          "227f1068-9e41-469f-bef0-275f27a0bdba": 0.02288517598498402,
+          "3e5a14df-4b14-4ea5-bb9d-46577c6dc9c8": NaN,
+          "941f0352-bb69-47d0-a9c5-ac29eb4f7319": -0.14737509486055897,
+          "cca1ac3e-f81f-4ebb-aa2b-8b0bf3e9e53b": -0.11310825180256597
+        },
+        "6012002000777": {
+          "0f3f37f8-0335-41e0-ae87-a1d677dfc7d7": NaN,
+          "227f1068-9e41-469f-bef0-275f27a0bdba": NaN,
+          "3e5a14df-4b14-4ea5-bb9d-46577c6dc9c8": NaN,
+          "941f0352-bb69-47d0-a9c5-ac29eb4f7319": NaN,
+          "cca1ac3e-f81f-4ebb-aa2b-8b0bf3e9e53b": NaN
+        },
+        "6012002000869": {
+          "0f3f37f8-0335-41e0-ae87-a1d677dfc7d7": 0.02750551771933712,
+          "227f1068-9e41-469f-bef0-275f27a0bdba": 0.014553970298309463,
+          "3e5a14df-4b14-4ea5-bb9d-46577c6dc9c8": -0.057863030546733425,
+          "941f0352-bb69-47d0-a9c5-ac29eb4f7319": 0.013425619755746963,
+          "cca1ac3e-f81f-4ebb-aa2b-8b0bf3e9e53b": 0.021551353146881197
+        }
+      },
+      "best_match_per_room": [
+        {
+          "room": "0f3f37f8-0335-41e0-ae87-a1d677dfc7d7",
+          "best_sensor": "6012002000326",
+          "correlation": -0.11683337258994493,
+          "best_lag": -3,
+          "n_bins": 13292
+        },
+        {
+          "room": "227f1068-9e41-469f-bef0-275f27a0bdba",
+          "best_sensor": "6012002000326",
+          "correlation": 0.02288517598498402,
+          "best_lag": 4,
+          "n_bins": 18048
+        },
+        {
+          "room": "3e5a14df-4b14-4ea5-bb9d-46577c6dc9c8",
+          "best_sensor": "6012002000869",
+          "correlation": -0.057863030546733425,
+          "best_lag": -1,
+          "n_bins": 3302
+        },
+        {
+          "room": "941f0352-bb69-47d0-a9c5-ac29eb4f7319",
+          "best_sensor": "6012002000326",
+          "correlation": -0.14737509486055897,
+          "best_lag": -3,
+          "n_bins": 15243
+        },
+        {
+          "room": "cca1ac3e-f81f-4ebb-aa2b-8b0bf3e9e53b",
+          "best_sensor": "6012002000326",
+          "correlation": -0.11310825180256597,
+          "best_lag": -4,
+          "n_bins": 11888
+        }
+      ]
+    }
+  }
+}
