@@ -23,14 +23,6 @@ integration analysis of accumulated CO2 exposure. See
 [`docs/report/MMA3001_Project_Report.docx`](docs/report/MMA3001_Project_Report.docx)
 (also available as [Markdown](docs/report/report.md)).
 
-**Project history:** this project originally targeted short-term room
-*occupancy* prediction (still in this repo, complete and validated — see
-[Earlier work](#earlier-work-occupancy-classification) below). It was
-rescoped to CO2 regression after reviewing the unit's own Week 5–7 course
-content: the occupancy model used classification methods the unit doesn't
-teach, while Week 5 teaches regression. See the report §1 for the full
-reasoning.
-
 ## Data
 
 Source: MMA3001 Dataset 2 (Monash Smart Infrastructure Occupancy and
@@ -41,14 +33,23 @@ and other variables in a nested-JSON payload).
 **Only 1 of the 5 environmental sensors is used** (`6012002000326`):
 
 - 2 sensors report every reading at the same frozen timestamp (a stuck
-  internal clock — discovered while building this project, not usable as
+  internal clock, discovered while building this project — not usable as
   a time series at all).
 - 1 sensor (`G.38`, the only one traceable to a named room) has only a
   4-month data window.
 - Of the remaining 2, `6012002000326` was chosen because it's
   independently validated: its indoor temperature/humidity correlate
   r=+0.84/+0.65 with real Bureau of Meteorology weather for the same
-  period (see [Earlier work](#earlier-work-occupancy-classification)).
+  period (`scripts/fetch_bom_weather.py`,
+  `scripts/weather_comparison_analysis.py` — see
+  [`reports/weather_comparison_results.json`](reports/weather_comparison_results.json)).
+
+A preliminary check (`scripts/sensor_matching_analysis.py`) also tested
+whether any occupancy zone's pattern correlates with any environmental
+sensor's readings, to see whether occupancy could be trusted as a
+per-room feature — see
+[`reports/sensor_matching_results.json`](reports/sensor_matching_results.json)
+and the report §7 for that result.
 
 Raw data files are not committed (see
 [`data/raw/README.md`](data/raw/README.md) for how to obtain them).
@@ -58,12 +59,11 @@ Raw data files are not committed (see
 ```
 ├── src/occupancy/       Python package: CO2 regression + integration
 │                        (co2_regression.py, co2_models.py, co2_integration.py),
-│                        plus the earlier occupancy pipeline, environmental
-│                        sensor loading, sensor-matching analysis, BoM comparison
+│                        environmental sensor loading, sensor-matching analysis,
+│                        BoM external-weather comparison
 ├── scripts/             co2_prediction_experiment.py, co2_integration_analysis.py,
-│                        co2_demo.py (live demo) — this project's primary scripts;
-│                        demo.py, run_experiment.py, etc. — earlier occupancy work
-├── models/              Pre-trained occupancy model + demo examples (earlier work)
+│                        co2_demo.py (live demo), fetch_bom_weather.py,
+│                        weather_comparison_analysis.py, sensor_matching_analysis.py
 ├── tests/               pytest unit tests (62, all passing)
 ├── data/raw/            Raw data (gitignored — see data/raw/README.md);
 │                        data/raw/bom/ holds fetched BoM weather CSVs
@@ -71,8 +71,8 @@ Raw data files are not committed (see
 ├── docs/project_brief/  Unit-supplied project brief and dataset docs
 ├── docs/api/            Generated HTML code documentation (pdoc)
 ├── docs/report/         Written project report (.docx submission + .md source)
-└── reports/             All experiment results (CO2, integration, sensor-matching,
-                         BoM comparison, and the earlier occupancy experiments)
+└── reports/             All experiment results (CO2 prediction, integration,
+                         sensor-matching, BoM comparison)
 ```
 
 ## Setup
@@ -98,9 +98,6 @@ This is the thing to run live in the presentation/interview. It:
    and what actually happened.
 3. **Lets you type in your own scenario** — current CO2, occupancy level,
    time of day — and get a live prediction.
-
-The earlier occupancy classifier's demo (`python scripts/demo.py`) still
-works too — see [Earlier work](#earlier-work-occupancy-classification).
 
 ## Running the tests
 
@@ -157,8 +154,8 @@ and the report §5 for why):
 **SVR has the lowest error.** Critically, **building occupancy does not
 improve prediction for any of the four methods** (tested directly, not
 assumed — see the report §4 for the full with/without-occupancy
-comparison table) — consistent with the earlier sensor-matching finding
-that no occupancy zone links to this sensor's room.
+comparison table) — consistent with the preliminary sensor-matching check
+finding that no occupancy zone links to this sensor's room.
 
 **Numerical integration:** over a fixed, genuinely gap-free 41-hour
 window, trapezoidal and Simpson's rule agree to within 0.1% at every
@@ -168,47 +165,11 @@ required finding and fixing a real bug: naively integrating across a
 
 Full results, method, and discussion: [`docs/report/MMA3001_Project_Report.docx`](docs/report/MMA3001_Project_Report.docx), §§4–6.
 
-## Earlier work: occupancy classification
-
-Before this rescoping, the project built and validated a short-term
-room-occupancy classifier — complete, tested, and still in this repo:
-
-```bash
-python scripts/demo.py                    # live demo (pre-trained model)
-python scripts/run_experiment.py          # full experiment
-python scripts/sensitivity_analysis.py    # bin-size / lookback sensitivity
-```
-
-| Model | Accuracy | F1 | ROC-AUC | Brier score (↓ better) |
-|---|---|---|---|---|
-| Persistence baseline | 0.816 | 0.771 | 0.809 | 0.184 |
-| Markov (time-of-day) baseline | 0.817 | 0.772 | 0.870 | 0.139 |
-| **Logistic regression** | **0.825** | **0.781** | **0.890** | **0.128** |
-| Random forest (100 trees) | 0.811 | — | 0.860 | — |
-
-This work also produced two supporting analyses used to select the CO2
-sensor above:
-
-- **Sensor-matching** (`scripts/sensor_matching_analysis.py`): tested
-  whether any occupancy zone's pattern correlates with any environmental
-  sensor's readings. Found no evidence of one — see
-  [`reports/sensor_matching_results.json`](reports/sensor_matching_results.json).
-- **BoM external-weather validation**
-  (`scripts/fetch_bom_weather.py`, `scripts/weather_comparison_analysis.py`):
-  confirmed sensor `6012002000326`'s readings are genuine by comparing
-  against real outdoor weather — see
-  [`reports/weather_comparison_results.json`](reports/weather_comparison_results.json).
-
-Full detail on both, and why occupancy classification was superseded as
-the project's primary focus (not because it failed, but because it used
-methods the unit doesn't teach), is in the report §7.
-
 ## Roadmap
 
 - [x] CO2 regression: 4 Week 5 methods, compared with/without occupancy
 - [x] Week 6 numerical integration of accumulated CO2 exposure
-- [x] Earlier work: occupancy classification (2 baselines, 2 ML models),
-      sensor-matching, BoM validation — all complete, kept as project history
+- [x] Sensor-matching and BoM external-weather validation (sensor selection)
 - [x] Written report (`docs/report/MMA3001_Project_Report.docx`)
 - [x] AI-use reflection section in the report (student review still
       recommended before submission — see the report's note to reader)
