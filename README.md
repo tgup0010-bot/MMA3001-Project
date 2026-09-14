@@ -1,4 +1,4 @@
-# MMA3001 Project — Room Occupancy Pattern Modelling
+# MMA3001 Project — Indoor CO2 Prediction
 
 [![CI](https://github.com/tgup0010-bot/mma3001-occupancy-prediction/actions/workflows/ci.yml/badge.svg)](https://github.com/tgup0010-bot/mma3001-occupancy-prediction/actions/workflows/ci.yml)
 
@@ -7,92 +7,72 @@ Monash University, 2026 S2.
 
 ## Engineering problem
 
-Predicting whether a room will be occupied in the near future lets a
-building's HVAC and lighting systems scale back conditioning in empty rooms
-and pre-condition ahead of expected arrivals — reducing energy waste without
-harming comfort. This project builds and validates a short-term occupancy
-prediction model from historical sensor data collected in Monash's Smart
-Infrastructure ("Living Lab") building.
+Indoor CO2 concentration is a standard proxy for ventilation adequacy —
+rising CO2 signals fresh-air supply isn't keeping up with occupant load.
+This project predicts a sensor's CO2 concentration **15 minutes ahead**
+from its own recent history and the building's current occupancy, so a
+building control system could increase ventilation pre-emptively rather
+than only reacting once CO2 is already elevated. It also directly tests
+whether occupancy actually helps predict CO2 at all.
 
-**Status: complete.** Data pipeline, two baselines, two ML models,
-chronological validation, and a sensitivity/optimisation analysis are all
-implemented and run end-to-end against the real dataset (see
-[Current results](#current-results) below). The full written report is at
+**Status: complete.** All four regression methods taught in MMA3001 Week 5
+(Linear Regression, Decision Tree Regression, SVR, Neural Network
+Regression) are implemented and compared, plus a Week 6 numerical-
+integration analysis of accumulated CO2 exposure. See
+[Current results](#current-results) below. The full written report is at
 [`docs/report/MMA3001_Project_Report.docx`](docs/report/MMA3001_Project_Report.docx)
 (also available as [Markdown](docs/report/report.md)).
+
+**Project history:** this project originally targeted short-term room
+*occupancy* prediction (still in this repo, complete and validated — see
+[Earlier work](#earlier-work-occupancy-classification) below). It was
+rescoped to CO2 regression after reviewing the unit's own Week 5–7 course
+content: the occupancy model used classification methods the unit doesn't
+teach, while Week 5 teaches regression. See the report §1 for the full
+reasoning.
 
 ## Data
 
 Source: MMA3001 Dataset 2 (Monash Smart Infrastructure Occupancy and
-Environmental Data), course-supplied.
+Environmental Data), course-supplied — the occupancy event log (5 zones)
+and the environmental sensor log (5 sensors: CO2, temperature, humidity,
+and other variables in a nested-JSON payload).
 
-- **Occupancy event log** — 9.09M rows, 5 rooms, continuous coverage from
-  Nov 2023 to Apr 2026 (an event is logged only when a room's occupancy
-  state changes). This is the dataset this project uses.
-- Environmental sensor readings and a second, later 2025–2026 data batch
-  were also supplied but are **not used** here — see
-  [Limitations](#known-data-limitations) below for why.
+**Only 1 of the 5 environmental sensors is used** (`6012002000326`):
 
-Raw data files are not committed to this repository (see
-[`data/raw/README.md`](data/raw/README.md) for sizes and how to obtain
-them); a small representative sample is committed at
-[`data/processed/occupancy_sample_50k.csv`](data/processed/occupancy_sample_50k.csv)
-for fast development and testing.
+- 2 sensors report every reading at the same frozen timestamp (a stuck
+  internal clock — discovered while building this project, not usable as
+  a time series at all).
+- 1 sensor (`G.38`, the only one traceable to a named room) has only a
+  4-month data window.
+- Of the remaining 2, `6012002000326` was chosen because it's
+  independently validated: its indoor temperature/humidity correlate
+  r=+0.84/+0.65 with real Bureau of Meteorology weather for the same
+  period (see [Earlier work](#earlier-work-occupancy-classification)).
 
-### Known data limitations
-
-- Of the 5 occupancy zones, only 2 could be traced to a named physical room
-  via the supplied location spreadsheet (`G.20`, and `G.25` — "Keenan Lab").
-  The other 3 are modelled as anonymous zones.
-- The environmental sensor data's 5 sensors don't resolve to the same rooms
-  as the occupancy zones (only 1 of 5 could be matched at all, to a
-  different room, `G.38`), so an occupancy↔environment relationship could
-  not be validated against the supplied metadata, and joining the two by
-  assuming a mapping was deliberately **not** attempted.
-- **A data-driven alternative was tried instead of the metadata join**
-  (`scripts/sensor_matching_analysis.py`): correlating each zone's
-  occupancy pattern against each sensor's readings directly, to see if the
-  data itself reveals a room correspondence the spreadsheet couldn't. It
-  found no evidence of one — see the report §7 and
-  [`reports/sensor_matching_results.json`](reports/sensor_matching_results.json)
-  for the full results and method. This also surfaced an unrelated
-  data-quality issue: 2 of the 5 environmental sensors report every
-  reading at the same stuck timestamp.
-- **A real external-data comparison was also run** against Bureau of
-  Meteorology observations for the nearest station (Moorabbin Airport,
-  fetched via `scripts/fetch_bom_weather.py` — BoM's bulk historical
-  endpoint blocks automated access, so only their ~15-month rolling public
-  archive is used). Only 1 of the 5 sensors (`6012002000326`) has data
-  overlapping that window; for it, indoor temperature/humidity correlate
-  r = +0.84 / +0.65 with real outdoor readings across 222 days — a
-  healthy, expected result supporting that sensor being genuine. See
-  report §7 and
-  [`reports/weather_comparison_results.json`](reports/weather_comparison_results.json).
-- A supplementary "Sample Data" batch (`PMV`, `Detailed` files) has no
-  column headers and, as of writing, no clarification has been published
-  on EdStem explaining what they represent. It is not used.
+Raw data files are not committed (see
+[`data/raw/README.md`](data/raw/README.md) for how to obtain them).
 
 ## Repository structure
 
 ```
-├── src/occupancy/       Python package: data loading, preprocessing,
-│                        feature engineering, baselines, ML models, evaluation,
-│                        environmental sensor loading, sensor-matching analysis,
-│                        BoM external-weather loading and comparison
-├── scripts/             demo.py (live demo), run_experiment.py,
-│                        sensitivity_analysis.py, train_and_save_model.py,
-│                        sensor_matching_analysis.py, fetch_bom_weather.py,
-│                        weather_comparison_analysis.py
-├── models/              Pre-trained model + demo examples (committed, tiny)
-│                        — lets the demo run instantly, no raw data needed
-├── tests/               pytest unit tests (49, all passing)
+├── src/occupancy/       Python package: CO2 regression + integration
+│                        (co2_regression.py, co2_models.py, co2_integration.py),
+│                        plus the earlier occupancy pipeline, environmental
+│                        sensor loading, sensor-matching analysis, BoM comparison
+├── scripts/             co2_prediction_experiment.py, co2_integration_analysis.py,
+│                        co2_demo.py (live demo) — this project's primary scripts;
+│                        demo.py, run_experiment.py, etc. — earlier occupancy work
+├── models/              Pre-trained occupancy model + demo examples (earlier work)
+├── tests/               pytest unit tests (62, all passing)
 ├── data/raw/            Raw data (gitignored — see data/raw/README.md);
 │                        data/raw/bom/ holds fetched BoM weather CSVs
 ├── data/processed/      Small committed sample data, derived artefacts
 ├── docs/project_brief/  Unit-supplied project brief and dataset docs
 ├── docs/api/            Generated HTML code documentation (pdoc)
 ├── docs/report/         Written project report (.docx submission + .md source)
-└── reports/             Experiment + sensitivity-analysis results, test report
+└── reports/             All experiment results (CO2, integration, sensor-matching,
+                         BoM comparison, and the earlier occupancy experiments)
 ```
 
 ## Setup
@@ -106,33 +86,26 @@ pip install -e ".[dev]"
 ## Live demo (for the presentation)
 
 ```bash
-python scripts/demo.py
+python scripts/co2_demo.py
 ```
 
 This is the thing to run live in the presentation/interview. It:
 
-1. **Loads a pre-trained model** from `models/occupancy_model.joblib`
-   (committed to the repo — starts in under a second, no need for the
-   raw 1.5GB file or to retrain anything).
-2. **Replays 15 real examples** from the test set (data the model never
-   trained on) — for each one, prints the room, the time, whether it was
-   occupied right now, what the model predicted, and what actually
-   happened. This is the live "does it actually work" evidence.
-3. **Lets you type in your own scenario** — pick a room, a time of day, a
-   day of week, and whether it's currently occupied — and the model
-   prints its live prediction. This is the "tune it yourself" part.
+1. **Trains the best model (SVR) fresh** (a few seconds — fast enough not
+   to need a saved model file).
+2. **Replays 12 real examples** from the test set (data the model never
+   trained on) — prints CO2 now, the model's 15-minute-ahead prediction,
+   and what actually happened.
+3. **Lets you type in your own scenario** — current CO2, occupancy level,
+   time of day — and get a live prediction.
 
-If `models/occupancy_model.joblib` is ever missing or out of date, regenerate
-it (needs the raw CSV in `data/raw/`, takes ~2-3 minutes):
-
-```bash
-python scripts/train_and_save_model.py
-```
+The earlier occupancy classifier's demo (`python scripts/demo.py`) still
+works too — see [Earlier work](#earlier-work-occupancy-classification).
 
 ## Running the tests
 
 ```bash
-pytest                                          # 28 unit tests
+pytest                                          # 62 unit tests
 pytest --junitxml=reports/test_report.xml       # regenerate the committed test report
 ```
 
@@ -142,38 +115,69 @@ pytest --junitxml=reports/test_report.xml       # regenerate the committed test 
 pdoc --output-dir docs/api src/occupancy
 ```
 
-## Running the full experiment
+## Running the full experiments
 
-Requires the raw occupancy CSV in `data/raw/` (see
+Requires the raw CSVs in `data/raw/` (see
 [`data/raw/README.md`](data/raw/README.md)):
 
 ```bash
-python scripts/run_experiment.py
+python scripts/co2_prediction_experiment.py
 ```
 
-This loads the full 9.09M-row event log, resamples it to a 15-minute
-per-room grid, builds the supervised next-interval-occupancy dataset,
-splits chronologically (80/20, never randomly — a random split would leak
-future information into training), and evaluates the persistence baseline,
-the time-of-day Markov baseline, and the logistic regression model.
-Results are written to `reports/experiment_results.json`.
+Loads the occupancy log and environmental sensor log, builds the CO2
+supervised-regression table, splits chronologically (never randomly), and
+trains/evaluates all four Week 5 regression methods — both with and
+without building occupancy as a feature. Results are written to
+`reports/co2_prediction_results.json`.
 
 ```bash
-python scripts/sensitivity_analysis.py
+python scripts/co2_integration_analysis.py
 ```
 
-Re-runs the pipeline across a sweep of time-bin resolutions (5/15/30/60
-min) and lookback-window lengths (30 min/1 h/2 h/4 h), fitting both the
-logistic regression and random forest models at each setting, and records
-accuracy, ROC-AUC, fit/predict time, and model size at each point. Results
-are written to `reports/sensitivity_results.json`. This is the evidence
-behind the optimisation section of the report (§6).
+Computes accumulated CO2 exposure via trapezoidal and Simpson's-rule
+numerical integration (MMA3001 Week 6), including a gap-aware variant that
+excludes sensor-outage panels rather than integrating across them, and a
+fixed-window convergence comparison across bin sizes. Results are written
+to `reports/co2_integration_results.json`.
 
 ### Current results
 
-On a chronological holdout (train up to 2025-10-15, test after), out of
-342,401 resampled 15-minute bins (26.5% dropped for missing lag/rolling
-history — see `data_info` in `reports/experiment_results.json`):
+**CO2 regression** (chronological holdout, cutoff 11 March 2026;
+17,010 rows after dropping rows with missing lag/rolling history —
+79.9% dropped, see `data_info` in `reports/co2_prediction_results.json`
+and the report §5 for why):
+
+| Model | MAE (ppm) | RMSE (ppm) | R² |
+|---|---|---|---|
+| Linear Regression | 9.012 | 25.579 | 0.3581 |
+| Decision Tree Regression | 9.353 | 28.708 | 0.1914 |
+| **SVR** | **8.350** | 25.894 | 0.3422 |
+| Neural Network Regression | 9.350 | 26.015 | 0.3360 |
+
+**SVR has the lowest error.** Critically, **building occupancy does not
+improve prediction for any of the four methods** (tested directly, not
+assumed — see the report §4 for the full with/without-occupancy
+comparison table) — consistent with the earlier sensor-matching finding
+that no occupancy zone links to this sensor's room.
+
+**Numerical integration:** over a fixed, genuinely gap-free 41-hour
+window, trapezoidal and Simpson's rule agree to within 0.1% at every
+tested resolution (15/30/60 min) — see the report §6. Getting there
+required finding and fixing a real bug: naively integrating across a
+636-day sensor outage as if CO2 varied linearly through it.
+
+Full results, method, and discussion: [`docs/report/MMA3001_Project_Report.docx`](docs/report/MMA3001_Project_Report.docx), §§4–6.
+
+## Earlier work: occupancy classification
+
+Before this rescoping, the project built and validated a short-term
+room-occupancy classifier — complete, tested, and still in this repo:
+
+```bash
+python scripts/demo.py                    # live demo (pre-trained model)
+python scripts/run_experiment.py          # full experiment
+python scripts/sensitivity_analysis.py    # bin-size / lookback sensitivity
+```
 
 | Model | Accuracy | F1 | ROC-AUC | Brier score (↓ better) |
 |---|---|---|---|---|
@@ -182,30 +186,29 @@ history — see `data_info` in `reports/experiment_results.json`):
 | **Logistic regression** | **0.825** | **0.781** | **0.890** | **0.128** |
 | Random forest (100 trees) | 0.811 | — | 0.860 | — |
 
-Logistic regression outperforms every baseline **and** the more complex
-random forest on every metric, while being ~50× cheaper to fit and to run
-per prediction (see the report §6.3) — a genuine, evidence-based
-justification for the final model choice, not a default pick. Full
-sensitivity analysis (bin size, lookback window) and the model-cost
-comparison are in [`docs/report/MMA3001_Project_Report.docx`](docs/report/MMA3001_Project_Report.docx), §6.
+This work also produced two supporting analyses used to select the CO2
+sensor above:
+
+- **Sensor-matching** (`scripts/sensor_matching_analysis.py`): tested
+  whether any occupancy zone's pattern correlates with any environmental
+  sensor's readings. Found no evidence of one — see
+  [`reports/sensor_matching_results.json`](reports/sensor_matching_results.json).
+- **BoM external-weather validation**
+  (`scripts/fetch_bom_weather.py`, `scripts/weather_comparison_analysis.py`):
+  confirmed sensor `6012002000326`'s readings are genuine by comparing
+  against real outdoor weather — see
+  [`reports/weather_comparison_results.json`](reports/weather_comparison_results.json).
+
+Full detail on both, and why occupancy classification was superseded as
+the project's primary focus (not because it failed, but because it used
+methods the unit doesn't teach), is in the report §7.
 
 ## Roadmap
 
-- [x] Data loading + schema validation
-- [x] Event log → regular time-grid preprocessing (with explicit max-gap
-      handling of long sensor outages)
-- [x] Feature engineering (calendar cyclical features, lag, rolling mean)
-- [x] Persistence baseline
-- [x] Time-of-day Markov chain baseline
-- [x] Logistic regression ML model
-- [x] Random forest ML model (second, richer comparison)
-- [x] Chronological validation split + evaluation metrics
-- [x] Sensitivity analysis: bin size and lookback-window trade-offs
-- [x] Runtime/model-complexity comparison across models
-- [x] Data-driven environmental-sensor-to-zone matching attempt (negative
-      result, documented — see report §7)
-- [x] External-data (BoM) sensor validation for the one sensor with
-      overlapping dates (positive result — see report §7)
+- [x] CO2 regression: 4 Week 5 methods, compared with/without occupancy
+- [x] Week 6 numerical integration of accumulated CO2 exposure
+- [x] Earlier work: occupancy classification (2 baselines, 2 ML models),
+      sensor-matching, BoM validation — all complete, kept as project history
 - [x] Written report (`docs/report/MMA3001_Project_Report.docx`)
 - [x] AI-use reflection section in the report (student review still
       recommended before submission — see the report's note to reader)
