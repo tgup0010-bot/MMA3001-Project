@@ -1,0 +1,46 @@
+{
+  "sensor_id": "6012002000326",
+  "raw_reading_count": 58909,
+  "duration_hours": 20720.195555555554,
+  "naive_trapezoidal_ppmh": 9543357.352361111,
+  "gap_aware_trapezoidal": {
+    "max_gap_hours": 2.0,
+    "total": 2305835.6184722222,
+    "hours_included": 5228.384444444444,
+    "hours_excluded": 15491.81111111111,
+    "n_panels_excluded": 8
+  },
+  "grid_results": {
+    "15": {
+      "n_points": 163,
+      "trapezoidal": 17817.3125,
+      "simpson": 17829.875
+    },
+    "30": {
+      "n_points": 83,
+      "trapezoidal": 18019.833333333336,
+      "simpson": 18019.944444444445
+    },
+    "60": {
+      "n_points": 41,
+      "trapezoidal": 17583.76666666667,
+      "simpson": 17571.82222222222
+    }
+  },
+  "convergence": [
+    {
+      "coarse_min": 30,
+      "fine_min": 15,
+      "change": -202.52083333333576,
+      "pct_change": -1.1366519688832744,
+      "expected_reduction_factor": 4
+    },
+    {
+      "coarse_min": 60,
+      "fine_min": 30,
+      "change": 436.0666666666657,
+      "pct_change": 2.4199261924361064,
+      "expected_reduction_factor": 4
+    }
+  ]
+}

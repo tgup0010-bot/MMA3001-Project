@@ -9,7 +9,15 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-from sklearn.metrics import accuracy_score, brier_score_loss, f1_score, roc_auc_score
+from sklearn.metrics import (
+    accuracy_score,
+    brier_score_loss,
+    f1_score,
+    mean_absolute_error,
+    r2_score,
+    roc_auc_score,
+    root_mean_squared_error,
+)
 
 
 def chronological_split(
@@ -91,4 +99,29 @@ def evaluate_predictions(y_true, y_prob, *, threshold: float = 0.5) -> dict:
         "brier_score": brier_score_loss(y_true, y_prob),
         "n": int(len(y_true)),
         "positive_rate": float(np.mean(y_true)),
+    }
+
+
+def evaluate_regression_predictions(y_true, y_pred) -> dict:
+    """Compute the standard MMA3001 Week 5.5 regression metrics.
+
+    Args:
+        y_true: Ground-truth continuous target values.
+        y_pred: Predicted values.
+
+    Returns:
+        A dict with ``mae`` (mean absolute error, in target units),
+        ``rmse`` (root mean squared error, in target units, more
+        sensitive to large errors than MAE), ``r2`` (fraction of target
+        variance explained relative to a mean-prediction baseline), and
+        ``n`` (rows evaluated).
+    """
+    y_true = np.asarray(y_true, dtype=float)
+    y_pred = np.asarray(y_pred, dtype=float)
+
+    return {
+        "mae": mean_absolute_error(y_true, y_pred),
+        "rmse": root_mean_squared_error(y_true, y_pred),
+        "r2": r2_score(y_true, y_pred),
+        "n": int(len(y_true)),
     }
