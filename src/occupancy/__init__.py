@@ -1,60 +1,71 @@
-"""occupancy: room-occupancy pattern modelling for MMA3001.
+"""co2_prediction: indoor CO2 concentration forecasting for MMA3001.
 
-Predicts short-term room occupancy from historical sensor event logs, to
-support energy-aware HVAC/lighting control decisions in the Monash Smart
-Infrastructure building.
+Predicts CO2 concentration 15 minutes ahead from recent sensor history
+and building occupancy, using all four Week 5 regression methods
+(Linear Regression, Decision Tree, SVR, Neural Network).
 
-See the project README and ``docs/report`` for the full engineering context,
-validation methodology and results.
+Also includes Week 6 numerical integration of accumulated CO2 exposure,
+sensor selection (BoM external-weather validation) and sensor-matching
+analysis.
+
+See the project README and ``docs/report`` for the full engineering
+context, validation methodology and results.
 """
 
-from occupancy.baselines import MarkovBaseline, persistence_predict_proba
 from occupancy.co2_models import (
     build_decision_tree_regression_pipeline,
     build_linear_regression_pipeline,
     build_neural_network_regression_pipeline,
     build_svr_pipeline,
 )
-from occupancy.co2_regression import build_co2_supervised_dataset, building_occupancy_series, co2_series
-from occupancy.data_loading import load_occupancy_log
+from occupancy.co2_regression import (
+    build_co2_supervised_dataset,
+    building_occupancy_series,
+    co2_series,
+)
+from occupancy.co2_integration import (
+    trapezoidal_integral,
+    trapezoidal_integral_gap_aware,
+    simpsons_integral,
+    richardson_order_check,
+)
 from occupancy.env_sensors import load_env_sensor_log, pivot_variable
-from occupancy.evaluation import chronological_split, evaluate_predictions, evaluate_regression_predictions
+from occupancy.evaluation import (
+    chronological_split,
+    evaluate_regression_predictions,
+)
 from occupancy.external_weather import load_bom_weather
-from occupancy.features import build_supervised_dataset
-from occupancy.model import build_logistic_pipeline, build_random_forest_pipeline
-from occupancy.preprocessing import resample_occupancy
-from occupancy.rooms import room_label
 from occupancy.sensor_matching import build_correlation_matrix, lagged_correlation
 from occupancy.sensors import sensor_label
 from occupancy.weather_comparison import compare_to_bom, daily_indoor_series
 
 __all__ = [
-    "load_occupancy_log",
-    "resample_occupancy",
-    "build_supervised_dataset",
-    "MarkovBaseline",
-    "persistence_predict_proba",
-    "build_logistic_pipeline",
-    "build_random_forest_pipeline",
+    # CO2 regression (Week 5)
+    "build_co2_supervised_dataset",
+    "building_occupancy_series",
+    "co2_series",
+    "build_linear_regression_pipeline",
+    "build_decision_tree_regression_pipeline",
+    "build_svr_pipeline",
+    "build_neural_network_regression_pipeline",
+    # Numerical integration (Week 6)
+    "trapezoidal_integral",
+    "trapezoidal_integral_gap_aware",
+    "simpsons_integral",
+    "richardson_order_check",
+    # Evaluation
     "chronological_split",
-    "evaluate_predictions",
-    "room_label",
+    "evaluate_regression_predictions",
+    # Environmental sensors
     "load_env_sensor_log",
     "pivot_variable",
     "sensor_label",
+    # Sensor validation
     "build_correlation_matrix",
     "lagged_correlation",
     "load_bom_weather",
     "compare_to_bom",
     "daily_indoor_series",
-    "build_linear_regression_pipeline",
-    "build_decision_tree_regression_pipeline",
-    "build_svr_pipeline",
-    "build_neural_network_regression_pipeline",
-    "building_occupancy_series",
-    "co2_series",
-    "build_co2_supervised_dataset",
-    "evaluate_regression_predictions",
 ]
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"

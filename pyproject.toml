@@ -3,9 +3,9 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "occupancy"
-version = "0.1.0"
-description = "Room-occupancy pattern modelling for MMA3001 (Monash Smart Infrastructure dataset)"
+name = "co2-prediction"
+version = "0.2.0"
+description = "Indoor CO2 concentration forecasting for MMA3001 (Monash Smart Infrastructure dataset)"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
