@@ -8,25 +8,24 @@
 
 ## 0. Prediction Contract — What Success Looks Like
 
-Before any modelling, a prediction contract defines exactly what the task is and what "good" means. This follows the Week 5.6 framework: five questions answered upfront so there is a fixed standard to evaluate results against later.
+Before any modelling, five questions are answered upfront so there is a fixed standard to evaluate results against.
 
 **1. What is being predicted?**
-CO2 concentration (ppm) 15 minutes into the future, at a fixed indoor sensor location inside a Monash University building.
+CO2 concentration (ppm) 15 minutes into the future at sensor 0326.
 
 **2. What is it predicted from?**
 Nine input features: current CO2, CO2 from 15 minutes ago, 1-hour rolling average, building occupancy count, time-of-day (cyclic), day-of-week (cyclic), and weekend flag.
 
 **3. What does "good" look like?**
-- **MAE ≤ 10 ppm** — below typical reading-to-reading variation; useful as a trend signal
-- **R² ≥ 0.25** — explains at least a quarter of variance; captures real structure
-- **No leakage** — test set strictly in the future relative to training set
+- MAE ≤ 10 ppm — below typical reading-to-reading variation
+- R² ≥ 0.25 — captures real structure in the data
+- No leakage — test set strictly in the future relative to training set
 
 **4. What would make this fail?**
-- Occupancy data is only useful if the sensor is in a room with an occupancy counter — if not, it is noise
-- The 636-day sensor outage means 80% of candidate rows cannot be used
+Occupancy is only useful if the sensor is physically in a monitored room. If it is not, occupancy is noise. The 636-day sensor outage also means 80% of candidate rows cannot be used.
 
 **5. What does success look like?**
-A result clearing MAE ≤ 10 ppm and R² ≥ 0.25 on the held-out test set, using a time-ordered split. Whether occupancy improves results is answered empirically via the zone-matching analysis in Section 3.
+All models clearing MAE ≤ 10 ppm and R² ≥ 0.25 on the held-out test set. Whether occupancy helps is answered via the zone-matching analysis in Section 3.
 
 ---
 
@@ -40,23 +39,19 @@ Four regression methods from MMA3001 Week 5 were compared: Linear Regression, De
 
 ---
 
-## 2. Data Audit: What the Dataset Actually Contains
+## 2. Data: What the Dataset Contains
 
 ### Sensor audit
 
 | Sensor ID | Status | Reason |
 |---|---|---|
-| `6012002000326` | ✓ **Used** | Longest coverage, validated against BoM data |
+| `6012002000326` | ✓ Used | Longest coverage, validated against BoM weather data |
 | `6012002000869` | ⚠ Short coverage | Only ~4 months — too short for train/test |
 | `6012002000125` | ⚠ No overlap | No overlap with occupancy log |
 | `6012002000777` | ✗ Frozen clock | All readings same timestamp — unusable |
 | `6012002000227` | ✗ Frozen clock | All readings same timestamp — unusable |
 
 The frozen-clock issue was not documented in the dataset — found by inspecting timestamps directly.
-
-![Data Audit Chart](chart7_data_audit.png)
-
-*Left: 80% of rows dropped due to 636-day outage and missing lag/rolling features. Right: sensor audit across all five sensors.*
 
 ### Row availability
 
@@ -67,91 +62,88 @@ The frozen-clock issue was not documented in the dataset — found by inspecting
 | After requiring lag + rolling features | 17,010 |
 | **Final dataset** | **17,010 (20.1%)** |
 
-### Feature availability
+The 636-day sensor outage is the primary cause of row loss. Missing rows are dropped rather than filled — imputing across a 636-day gap would introduce far greater error than working with the available data.
 
-| Feature | Source | Notes |
+### Inputs and output
+
+| Input | Units | What it represents |
 |---|---|---|
-| `co2_now` | Sensor 0326 | Direct reading |
-| `co2_lag1` | Derived | Requires previous valid reading |
-| `co2_rolling_1h` | Derived | Requires 4 consecutive readings |
-| `building_occupancy` | Occupancy log | Total zones occupied (0–5) |
-| `hour_sin`, `hour_cos` | Derived | Cyclic time-of-day encoding |
-| `dow_sin`, `dow_cos` | Derived | Cyclic day-of-week encoding |
-| `is_weekend` | Derived | 1 = Saturday/Sunday |
+| `co2_now` | ppm | Current CO2 reading |
+| `co2_lag1` | ppm | CO2 reading from 15 minutes ago |
+| `co2_rolling_1h` | ppm | Average CO2 over the past hour |
+| `building_occupancy` | count (0–5) | How many of the 5 zones currently have people |
+| `hour_sin`, `hour_cos` | — | Time of day, encoded cyclically |
+| `dow_sin`, `dow_cos` | — | Day of week, encoded cyclically |
+| `is_weekend` | 0 or 1 | Whether it is Saturday or Sunday |
+
+**Output:** Predicted CO2 (ppm) 15 minutes ahead.
+
+The sensor was externally validated: its temperature and humidity readings correlate at r = +0.84 and r = +0.65 with Bureau of Meteorology records from Moorabbin Airport across 222 days. This confirms the sensor is physically working correctly.
 
 ---
 
 ## 3. Sensor-to-Zone Matching: The Weekend Spike Analysis
 
-Before using occupancy as a feature, a dedicated analysis was done to try to match sensor 0326 to a specific occupancy zone. This directly follows the method suggested by the teaching staff: *"isolate it to weekends or days where it's not used that much — on a weekend maybe only one room is used and you find that spike of occupancy and CO2 and you can make that connection."*
-
-### Method
-
-1. Filter all occupancy and CO2 data to weekends (Saturday and Sunday only)
-2. Find 15-minute bins where **exactly one** of the five zones is occupied
-3. Compare sensor 0326's CO2 during those single-zone events to the weekend baseline (no zones occupied)
-4. If the sensor is in Zone X's room, CO2 should spike by 50–200 ppm when only Zone X is occupied
+Before treating occupancy as a useful feature, a dedicated analysis was done to match sensor 0326 to a specific occupancy zone. Method: on weekends, most of the building is empty — when exactly one zone is occupied, CO2 should spike by 50–200 ppm at the sensor if they are co-located.
 
 The full 9-million-row occupancy dataset and 29,039 CO2 readings were used.
 
-### Results
+### Weekend spike results
 
 From 4,652 weekend bins with both occupancy and CO2 data, 2,351 had exactly one zone occupied:
 
-| Zone | Events (n) | Mean CO2 | Δ vs baseline (440 ppm) | p-value | Verdict |
-|---|---|---|---|---|---|
-| Zone C | 1,809 | 441.8 ppm | +1.8 ppm | 0.423 | No spike — not in Zone C |
-| Zone A | 200 | 446.2 ppm | +6.2 ppm | 0.024 | Statistically sig. but physically negligible |
-| Zone D | 185 | 434.7 ppm | −5.3 ppm | 0.074 | CO2 lower — not in Zone D |
-| Zone B | 157 | 438.6 ppm | −1.4 ppm | 0.599 | No spike — not in Zone B |
-| Zone E | 0 | — | — | — | Never exclusively occupied on weekends |
+| Zone | Events (n) | Δ CO2 vs baseline | p-value | Verdict |
+|---|---|---|---|---|
+| Zone C | 1,809 | +1.8 ppm | 0.423 | No spike |
+| Zone A | 200 | +6.2 ppm | 0.024 | Statistically sig. but physically negligible |
+| Zone D | 185 | −5.3 ppm | 0.074 | CO2 lower — not co-located |
+| Zone B | 157 | −1.4 ppm | 0.599 | No spike |
+| Zone E | 0 | — | — | Never exclusively occupied on weekends |
 
-The expected CO2 rise if a sensor is co-located with an occupied zone is 50–200 ppm. The largest observed delta is +6.2 ppm for Zone A — less than 1.5% of baseline. This is not a meaningful spike.
+Expected if co-located: 50–200 ppm. Largest observed: +6.2 ppm.
 
 ### Pearson correlation: zone headcount vs CO2
 
-| Zone | r (all data) | r (weekdays) | Interpretation |
-|---|---|---|---|
-| Zone A | −0.166 | −0.220 | Negative — more people, slightly lower CO2 at sensor |
-| Zone B | −0.174 | −0.216 | Negative |
-| Zone C | −0.144 | −0.163 | Negative |
-| Zone D | −0.139 | −0.171 | Negative |
+| Zone | r (all data) | r (weekdays) |
+|---|---|---|
+| Zone A | −0.166 | −0.220 |
+| Zone B | −0.174 | −0.216 |
+| Zone C | −0.144 | −0.163 |
+| Zone D | −0.139 | −0.171 |
 
-All correlations are **negative** — the opposite of what co-location would produce. The most likely explanation: when people arrive, the building HVAC increases fresh air flow, slightly reducing CO2 throughout the building regardless of sensor location.
+All correlations are negative — the opposite of what co-location would produce. When people arrive, HVAC increases fresh air flow, slightly reducing CO2 throughout the building.
 
 ![Zone matching chart](chart10_zone_matching.png)
 
-*Left: CO2 spike per zone when exclusively occupied on weekends — all deltas well below the expected 50–200 ppm range. Right: all zone-CO2 correlations are negative, ruling out co-location for all four zones.*
+*Left: CO2 spike per zone when exclusively occupied on weekends — all deltas well below the expected 50–200 ppm. Right: all zone-CO2 correlations are negative, ruling out co-location.*
 
-### Conclusion
-
-**Sensor 0326 cannot be matched to any of the five occupancy zones.** Both the targeted weekend spike analysis and the correlation analysis give the same answer: the sensor is not in any monitored room. Occupancy data therefore cannot provide a useful CO2 prediction signal for this sensor. The models were built with this confirmed knowledge.
+**Conclusion: Sensor 0326 cannot be matched to any of the five occupancy zones. Occupancy data cannot provide a useful CO2 prediction signal for this sensor.**
 
 ---
 
 ## 4. Computational Solution
 
-All four regression methods are implemented in `occupancy.co2_models` as scikit-learn Pipelines. All use the same StandardScaler preprocessing for a fair comparison.
+All four regression methods are implemented as scikit-learn Pipelines with the same StandardScaler preprocessing step for a fair comparison.
 
-**Linear Regression** — baseline; straight-line relationship between inputs and target.
+**Linear Regression** — straight-line relationship between inputs and target. Simplest baseline.
 
-**Decision Tree Regression** — if/else rule splits; max depth 8. Can overfit.
+**Decision Tree Regression** — if/else rule splits (max depth 8). Can capture nonlinear patterns but tends to overfit.
 
-**Support Vector Regression (SVR)** — smooth curve fitting; RBF kernel, C=10, epsilon=0.5.
+**Support Vector Regression (SVR)** — smooth curve fitting with an RBF kernel (C=10, epsilon=0.5). Works well on datasets of this size with mildly nonlinear relationships.
 
-**Neural Network Regression** — two layers (32, 16 units), early stopping. Most flexible.
+**Neural Network Regression** — two layers (32, 16 units) with early stopping. Most flexible but prone to overfitting on small datasets.
 
-Occupancy (total zones, 0–5) was still included as a feature to empirically confirm it adds no value — consistent with the zone-matching result.
+Occupancy was still included as a feature to empirically confirm the Section 3 finding — it adds no value.
 
 ---
 
 ## 5. Results and Model Comparison
 
-### Train / test split
-
-17,010 rows split in time order: 80% training (13,608 rows), 20% testing (3,402 rows). Cutoff: 11 March 2026. A random split was not used — it would constitute data leakage (Week 5.6 principle).
+17,010 rows split in time order — first 80% for training (13,608 rows), last 20% for testing (3,402 rows), cutoff 11 March 2026. A random split was not used as it would constitute data leakage.
 
 ![Train/test split timeline](chart8_split_timeline.png)
+
+*Blue = training period, orange = test period. The 636-day outage is the large red gap.*
 
 ### Model results
 
@@ -162,9 +154,9 @@ Occupancy (total zones, 0–5) was still included as a feature to empirically co
 | **SVR** | **8.350** | **25.894** | **0.3422** |
 | Neural Network Regression | 9.350 | 26.015 | 0.3360 |
 
-![MAE comparison chart](chart1_mae.png)
+![MAE comparison](chart1_mae.png)
 
-### Was success reached?
+### Success criteria assessment
 
 | Criterion | Target | Result | Status |
 |---|---|---|---|
@@ -173,45 +165,37 @@ Occupancy (total zones, 0–5) was still included as a feature to empirically co
 | No data leakage | Time-ordered split | 11 Mar 2026 cutoff used | ✓ Met |
 | Decision Tree R² | ≥ 0.25 | 0.191 | ✗ Not met |
 
-![Success threshold](chart9_success.png)
+Three of four models clear both success criteria. Decision Tree fails R² due to overfitting.
 
-Three of four models clear both success criteria. Decision Tree fails R² due to overfitting. SVR is the best overall.
+**SVR is the best model.** It had the lowest MAE (8.35 ppm). CO2 dynamics are mildly nonlinear — it spikes quickly and decays slowly — and SVR's RBF kernel captures this without overfitting the way Decision Tree does. Neural Network and Linear Regression were close behind; the dataset (17k rows) is too small to give the neural network a meaningful advantage.
 
-**Why R² is moderate (~0.34):** The models explain about a third of next-15-minute CO2 variance. The rest is driven by HVAC switching, doors/windows, and equipment — none accessible to the model. This is honest; the prediction is a useful trend signal, not a precise forecast.
+**Why R² ≈ 0.34:** The models explain about a third of next-15-minute CO2 variance. The rest is driven by HVAC switching, doors/windows, and equipment — none accessible to the model. This is an honest result; the prediction is a useful trend signal, not a precise forecast.
 
 ### Does occupancy help?
 
 | Model | R² with occupancy | R² without occupancy | Change |
 |---|---|---|---|
 | Linear Regression | 0.3581 | 0.3579 | +0.0002 (no difference) |
-| Decision Tree Regression | 0.1914 | 0.3305 | −0.1391 (worse) |
+| Decision Tree Regression | 0.1914 | 0.3305 | −0.1391 (gets worse) |
 | SVR | 0.3422 | 0.3438 | −0.0016 (no difference) |
 | Neural Network Regression | 0.3360 | 0.3352 | +0.0008 (no difference) |
 
-![Occupancy comparison chart](chart2_occupancy.png)
-
-Occupancy makes no meaningful difference for any model, and actively hurts Decision Tree. This is fully explained by the Section 3 finding — the sensor is not in a monitored room.
+Occupancy makes no meaningful difference and actively hurts Decision Tree. This is fully explained by Section 3 — the sensor is not in a monitored room.
 
 ---
 
-## 6. Handling Missing Data
+## 6. Numerical Integration — CO2 Exposure
 
-The 636-day sensor outage reduces 84,576 candidate rows to 17,010 (20%). Missing rows are dropped rather than filled — imputing across a 636-day gap would introduce far greater error than working with the available data.
+Trapezoidal rule and Simpson's 1/3 rule are implemented from the Week 6 formulas directly.
 
----
+**Bug found and fixed:** The first version resampled CO2 onto a regular grid before integrating, which made the 636-day outage look like a 15-minute gap. This caused a 9× discrepancy between the two methods. Fixed with a gap-aware trapezoidal rule that skips panels where endpoints are more than 2 hours apart.
 
-## 7. Numerical Integration — CO2 Exposure
+| Method | Estimate |
+|---|---|
+| Naive trapezoidal (bridges outage) | 9,543,357 ppm·h |
+| Gap-aware trapezoidal | 2,305,836 ppm·h |
 
-Trapezoidal rule and Simpson's 1/3 rule are implemented in `occupancy.co2_integration` from the Week 6 formulas directly.
-
-**Bug found:** The first version bridged the 636-day outage when resampling, causing a 9× discrepancy between methods. Fixed with a gap-aware trapezoidal rule that skips panels where endpoints are more than 2 hours apart.
-
-- Naive estimate: **9,543,357 ppm·h**
-- Gap-aware estimate: **2,305,836 ppm·h**
-
-![Integration chart](chart3_integration.png)
-
-**Convergence check (41-hour gap-free window):**
+**Convergence check (41-hour gap-free window, Oct 2025):**
 
 | Bin size | Trapezoidal | Simpson | Agreement |
 |---|---|---|---|
@@ -219,31 +203,27 @@ Trapezoidal rule and Simpson's 1/3 rule are implemented in `occupancy.co2_integr
 | 30 min | 18,019.8 ppm·h | 18,019.9 ppm·h | 0.001% |
 | 60 min | 17,583.8 ppm·h | 17,571.8 ppm·h | 0.068% |
 
-Both methods agree to within 0.1% on clean data.
+Both methods agree to within 0.1% on clean data. The slight variation across bin sizes reflects real sensor noise, not numerical error.
 
 ---
 
-## 8. Limitations and Lessons Learned
+## 7. Limitations and Lessons Learned
 
-**The predictions are moderate, not great.** R² ≈ 0.34 is a real but limited result. HVAC data, door/window state, and room-level occupancy would be needed for a stronger prediction.
+**The predictions are moderate, not great.** R² ≈ 0.34 reflects what a single sensor with time-series lag features can realistically achieve. HVAC data and room-level occupancy would be needed for a stronger result.
 
-**The sensor-to-zone matching was attempted using the full dataset and failed.** The weekend spike method was applied to all 9 million occupancy rows. No zone produced a CO2 spike consistent with co-location. Both methods (spike analysis + correlation) gave the same negative result. This is a concrete, data-driven finding.
+**The zone-matching test was run and failed.** The weekend spike method was applied to the full 9-million-row dataset. No zone produced a CO2 spike consistent with co-location. This is a concrete data-driven finding, not an absence of analysis.
 
-**Four of five sensors have problems** — two frozen clocks, one too short. Not in the documentation; found by inspection.
+**Four of five sensors have problems** — two frozen clocks, one too short for modelling, one with no occupancy overlap. Not documented; found by inspecting timestamps.
 
-**The sensor was externally validated** — r = +0.84 (temperature) and r = +0.65 (humidity) vs BoM Moorabbin Airport over 222 days. It is physically working correctly.
-
-![Sensor validation chart](chart5_sensor_validation.png)
-
-**The occupancy log filename was misleading** — "MayToDec2024" spans November 2023 to April 2026.
+**The occupancy log filename was misleading** — "MayToDec2024" spans November 2023 to April 2026. Actual date range found by checking the data directly.
 
 ---
 
-## 9. AI-Use Reflection
+## 8. AI-Use Reflection
 
-I used Claude (Claude Code) throughout this project for data exploration, coding, analysis, and drafting. The zone-matching analysis in Section 3 was directed after understanding what the teaching staff described as the right approach for this dataset type — then Claude ran it against the full 9-million-row dataset.
+I used Claude (Claude Code) throughout this project for data exploration, coding, analysis, and drafting. The engineering framing, scope decisions, and interpretation of results are mine. When the two integration methods gave completely different answers, I pushed to find out why rather than accepting either result.
 
-The main bugs found — frozen-clock sensors, gap-bridging in integration — were caught by running code against real data and checking when results didn't make sense. All numbers in this report come from scripts that can be rerun from `reports/`.
+The zone-matching analysis was run after understanding what the teaching staff described as the right approach — then Claude ran it against the full dataset. All numbers in this report come from scripts in `reports/` that can be rerun.
 
 ---
 
