@@ -67,7 +67,7 @@ CO₂ readings are absent wherever the sensor experienced an outage. A 636-day o
 
 The figure below shows the impact:
 
-![Data pipeline: raw candidate timestamps versus dropped rows versus rows retained for modelling](chart_data_pipeline.png)
+![Data pipeline: raw candidate timestamps versus dropped rows versus rows retained for modelling](chart_data_pipeline.png){width=4.3in}
 
 Of 84,576 candidate 15-minute timestamps in the raw log, 17,010 (20.1%) have all four required values present and are retained for modelling. The remaining 67,566 rows (79.9%) are dropped.
 
@@ -150,6 +150,20 @@ Adding building occupancy as a feature provides no measurable improvement for an
 
 ---
 
+### 4.1 Diagnostic plots
+
+The comparison table above is aggregate; the plots below show what it looks like row by row.
+
+![Ground truth CO2 vs. all four models' predictions — full test set (daily mean) and a representative 5-day detail window at native 15-minute resolution](chart11_predictions_timeseries.png){width=4.3in}
+
+All four track the everyday CO2 trend closely; they diverge at the sharp spikes in the detail panel (14-19 March), where every model lags or flattens the peak — the Decision Tree even overshoots into a spike the sensor never reached (15 March), a symptom of its piecewise-constant leaves extrapolating from a small high-CO2 training leaf.
+
+![Predicted vs. actual CO2 for each model on the held-out test set, with a y=x reference line](chart12_predicted_vs_actual.png){width=4.3in}
+
+![Residual (predicted minus actual) vs. predicted CO2 for each model](chart13_residuals.png){width=4.3in}
+
+Predicted-vs-actual makes the R² numbers concrete: all four point clouds hug y=x below 550 ppm, then fall well short of it as actual CO2 rises past 600 ppm. The residual plots show the same effect directionally: residuals sit near zero typically but turn increasingly negative as predicted CO2 rises, rather than scattering symmetrically — a model under-responding to its most extreme inputs, consistent with the training data being dominated by the 400-550 ppm range (Section 2.3).
+
 ## 5. Validation
 
 ### 5.1 Train/Test Split
@@ -157,6 +171,8 @@ Adding building occupancy as a feature provides no measurable improvement for an
 The dataset was divided chronologically: the first 80% of rows (13,608) were used for training; the final 20% (3,402 rows) were held out for testing. The training period ends on 11 March 2026.
 
 A random split was deliberately not used. CO₂ time series are strongly autocorrelated: adjacent readings are similar to one another. A random split would scatter test points throughout the training period, allowing the model to effectively look up nearby values seen during training. The resulting test score would measure interpolation ability rather than the ability to forecast a genuinely unseen future period. The chronological split correctly simulates deployment conditions.
+
+![Chronological train/test split over the full sensor history for sensor 6012002000326](chart14_train_test_split.png){width=4.3in}
 
 ### 5.2 Evaluation Metrics
 

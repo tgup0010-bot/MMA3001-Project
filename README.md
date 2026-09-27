@@ -58,7 +58,7 @@ Raw data files are not committed (see [`data/raw/README.md`](data/raw/README.md)
 ```
 ├── src/occupancy/       Python package: CO2 regression + integration models
 ├── scripts/             Experiment scripts (prediction, integration, demo, analysis)
-├── tests/               pytest unit tests (62, all passing)
+├── tests/               pytest unit tests (34, all passing)
 ├── docs/report/         Written report (.md source + .docx submission + charts)
 ├── docs/MMA3001_Presentation.pptx   12-slide presentation
 ├── reports/             JSON experiment results
@@ -84,7 +84,7 @@ Trains SVR fresh, replays 12 real test-set predictions, then lets you type in yo
 ```bash
 python scripts/co2_prediction_experiment.py   # CO2 regression (all 4 models)
 python scripts/co2_integration_analysis.py    # Numerical integration analysis
-pytest                                         # Run all 62 tests
+pytest                                         # Run all 34 tests
 ```
 
 ## AI Use
